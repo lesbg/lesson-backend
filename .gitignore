@@ -3,3 +3,4 @@
 .pydevproject
 *.pyo
 *.pyc
+local-push.sh
