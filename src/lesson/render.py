@@ -189,7 +189,7 @@ class Page:
             else:
                 self.status = web_error[400]
                 self.error += u'\nIn addition, the web server return unknown error code %i' % (self.errno,)
-            return {'errno': self.status, 'error': self.error}
+            return {'errno': unicode(self.status), 'error': self.error}
         if len(args) == 1:
             if self.check_vars:
                 _die_on_string(args[0])

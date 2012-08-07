@@ -23,10 +23,10 @@ BAD_METHOD   = 405 # Method Not Allowed
 
 web_error = {
 
-400: u'400 Bad Request',
-401: u'401 Unauthorized',
-403: u'403 Forbidden',
-404: u'404 Not Found',
-405: u'405 Method Not Allowed'
+400: '400 Bad Request',
+401: '401 Unauthorized',
+403: '403 Forbidden',
+404: '404 Not Found',
+405: '405 Method Not Allowed'
 
 }
