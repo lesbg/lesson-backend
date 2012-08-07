@@ -158,6 +158,7 @@ class Page:
     query = None
     errno = None
     error = None
+    status = None
     
     def __init__(self):
         self.db = _global_data.db
@@ -175,11 +176,11 @@ class Page:
         if self.errno is not None:
             self.error = unicode(self.error)
             if web_error.has_key(self.errno):
-                web.ctx.status = web_error[self.errno]
+                self.status = web_error[self.errno]
             else:
-                web.ctx.status = web_error[400]
+                self.status = web_error[400]
                 self.error += u'\nIn addition, the web server return unknown error code %i' % (self.errno,)
-            return {'errno': web.ctx.status, 'error': self.error}
+            return {'errno': self.status, 'error': self.error}
         if len(args) == 1:
             if self.check_vars:
                 _die_on_string(args[0])
@@ -398,7 +399,17 @@ class Page:
 
         self.query = query
 
-              
+    def _set_status(self, procedure, args, kwargs):
+        """
+        Set self.status to current web.ctx.status, then after page has been
+        rendered, set web.ctx.status to updated self.status.  This is needed
+        for old web.py (0.32).
+        """
+        self.status = web.ctx.status
+        retval = self._parse(procedure, args, kwargs)
+        web.ctx.status = self.status
+        return retval
+    
     def _parse(self, procedure, args, kwargs):
         (args, kwargs) = self._strip_prefix(args, kwargs)
         
@@ -454,16 +465,17 @@ class Page:
     # These check whether the user is logged in and what permissions they have
     # before granting any access to the page. This shouldn't be overridden
     def GET(self, *args, **kwargs):
-        return self._parse(self.get, args, kwargs)
+        retval = self._set_status(self.get, args, kwargs)
+        return retval
     
     def PUSH(self, *args, **kwargs):
-        return self._parse(self.push, args, kwargs)
+        return self._set_status(self.push, args, kwargs)
     
     def PUT(self, *args, **kwargs):
-        return self._parse(self.put, args, kwargs)
+        return self._set_status(self.put, args, kwargs)
      
     def DELETE(self, *args, **kwargs):
-        return self._parse(self.delete, args, kwargs)
+        return self._set_status(self.delete, args, kwargs)
   
 class ListPage(Page):
     permissions = 'show_list'
