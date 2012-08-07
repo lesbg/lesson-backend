@@ -15,8 +15,21 @@
 #
 # Copyright (C) 2012 Jonathan Dieter <jdieter@lesbg.com>
 
+import sys, os
+abspath = os.path.dirname(__file__)
+if abspath not in sys.path:
+    sys.path.append(abspath)
+os.chdir(abspath)
+
 import render
 
-if __name__ == '__main__' :
-    render.start()
-#print user.Title, user.DateSeparator, user.DepartmentIndex, user.Department.Department
+mode = "debug"
+
+try:
+    from mod_wsgi import version
+    print "Detected mod_wgi version %i.%i" % version
+    mode = "wsgi"
+except:
+    pass
+
+application = render.start(mode)

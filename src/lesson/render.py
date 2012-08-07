@@ -27,6 +27,8 @@ from controller.permission import Permission
 
 import controller.core_version #@UnusedImport
 
+import sys
+
 from version import VersionCheck
 
 from model.database import User
@@ -110,9 +112,16 @@ def _die_on_string(obj):
         if isinstance(obj, str):
             raise ValueError('All strings must be unicode strings')
     
-def start():
+def start(mode):
     app = web.application(urls, globals())
-    app.run()
+    if mode == "debug":
+        app.run()
+    elif mode == "wsgi":
+        application = app.wsgifunc()
+        return application
+    else:
+        print "ERROR: Unknown mode: %s" % (mode,)
+        sys.exit(1)
 
 class _ActionMetaClass(type):
     def __init__(klass, name, bases, attrs): #@NoSelf
