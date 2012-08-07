@@ -26,7 +26,7 @@ import render
 mode = "debug"
 
 try:
-    from mod_wsgi import version
+    from mod_wsgi import version #@UnresolvedImport
     print "Detected mod_wgi version %i.%i" % version
     mode = "wsgi"
 except:
