@@ -214,10 +214,13 @@ class Page:
             return True
     
     def gen_link(self, page):
-        page = '%s/%s' % (web.ctx.host, page)
-        while page.find('//') > -1:
-            page = page.replace('//', '/')
-        return u'%s://%s' % (web.ctx.protocol, page)
+        """
+        Generate absolute url from app relative url
+        """
+        if page.startswith('/'):
+            page = page[1:]
+        page = '%s/%s' % (web.ctx.home, page)
+        return page        
     
     def check_permissions(self):
         if not self.logged():
