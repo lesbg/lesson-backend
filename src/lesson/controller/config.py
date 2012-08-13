@@ -1,4 +1,4 @@
-# lesson/config.py
+# lesson/controller/config.py
 #
 # This file is part of LESSON.  LESSON is free software: you can
 # redistribute it and/or modify it under the terms of the GNU General Public
@@ -43,7 +43,9 @@ def create_config(path):
     """
     config = ConfigParser.RawConfigParser()
     config.add_section('Main')
-    config.set('Main', 'database', u'mysql+mysqldb://test.example.com/lesson?charset=utf8')
+    config.set('Main', 'database',
+               u'mysql+mysqldb://test.example.com/lesson?charset=utf8')
+    config.set('Main', 'script dir', u'scripts')
     if not os.path.exists(os.path.dirname(path)):
         try:
             os.makedirs(os.path.dirname(path), 0700)
