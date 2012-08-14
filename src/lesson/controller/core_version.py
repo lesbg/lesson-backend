@@ -15,12 +15,8 @@
 #
 # Copyright (C) 2012 Jonathan Dieter <jdieter@lesbg.com>
 
-from version import VersionCheck
+from version import PyVersionCheck
 
-class CoreDBVersion(VersionCheck):
+class CoreDBVersion(PyVersionCheck):
     uuid = '7bb2302a-a003-11e1-9b06-00163e9a5f9b'
-    version = 1
-
-class CoreBEVersion(VersionCheck):
-    uuid = '97369c5e-a004-11e1-9b06-00163e9a5f9b'
-    version = 1
+    version = 2

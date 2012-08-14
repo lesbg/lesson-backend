@@ -15,11 +15,12 @@
 #
 # Copyright (C) 2012 Jonathan Dieter <jdieter@lesbg.com>
 
-INVALID      = 400 # Bad Request
-UNAUTHORIZED = 401 # Unauthorized
-FORBIDDEN    = 403 # Forbidden
-NOT_FOUND    = 404 # Not Found
-BAD_METHOD   = 405 # Method Not Allowed
+INVALID        = 400 # Bad Request
+UNAUTHORIZED   = 401 # Unauthorized
+FORBIDDEN      = 403 # Forbidden
+NOT_FOUND      = 404 # Not Found
+BAD_METHOD     = 405 # Method Not Allowed
+INTERNAL_ERROR = 500 # Internal Server Error
 
 web_error = {
 
@@ -27,6 +28,7 @@ web_error = {
 401: '401 Unauthorized',
 403: '403 Forbidden',
 404: '404 Not Found',
-405: '405 Method Not Allowed'
+405: '405 Method Not Allowed',
+500: '500 Internal Server Error'
 
 }

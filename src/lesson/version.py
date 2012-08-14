@@ -16,7 +16,7 @@
 # Copyright (C) 2012 Jonathan Dieter <jdieter@lesbg.com>
 
 from model.database import Version
-import os
+import subprocess, os.path
 
 class VersionCheck(object):
     """
@@ -43,11 +43,13 @@ class VersionCheck(object):
     script_dir = None
     version = None
     auto_update = True
+    extension = 'sh'
     
-    def __init__(self, db):
+    def __init__(self, db, script_dir=None):
         if self.__class__.__name__ == "VersionCheck":
             raise ValueError("'VersionCheck' is a virtual class and should not be instantiated directly")
         self.db = db
+        self.script_dir = script_dir
     
     def check_file(self, ufile):
         """
@@ -63,12 +65,15 @@ class VersionCheck(object):
         Run an update file and return True if update was successful, False if
         it wasn't successful.  This function may be overridden if desired
         """
-        retval = os.system(ufile)
-        return (retval == 0)
+        try:
+            messages = subprocess.check_output(ufile, stderr=subprocess.STDOUT, shell=True) #@UnusedVariable
+            return (True, None)
+        except:
+            return (False, u"Error running %s" % (ufile,))
     
     def __check_file(self, start_ver, stop_ver):
         ufile = os.path.join("%s" % (self.script_dir,),
-                             "%s-update-%i-%i" % (self.script_dir, ))
+                             "%s-update-%i-%i.%s" % (self.uuid, start_ver, stop_ver, self.extension))
         
         # Check whether update exists for start_ver -> stop_ver
         if self.check_file(ufile):
@@ -100,18 +105,53 @@ class VersionCheck(object):
         whether the versions match and the string is the error message
         if they don't match
         """
+        print "Checking..."
         if self.db is None:
             raise ValueError("Database variable 'db' isn't set")
+        if self.uuid is None:
+            raise ValueError("UUID variable 'uuid' isn't set")
         cur_ver = self.db.session.query(Version).get(self.uuid)
         if cur_ver.Version > self.version:
             return (False, u"The %s version in the database is %i, while our version is %i.  Please upgrade module %s" % (cur_ver.Type, cur_ver.Version, self.version, cur_ver.Type))
         elif cur_ver.Version < self.version:
             script_files = [None]
             if self.script_dir is not None:
-                script_files = self.__check_file(cur_ver, self.version)
+                script_files = self.__check_file(cur_ver.Version, self.version)
             if script_files == [None]:
                 return (False, u"The %s version in the database is %i, while our version is %i.  Please manually upgrade the database for %s" % (cur_ver.Type, cur_ver.Version, self.version, cur_ver.Type))
             for ufile in script_files:
-                if not self.run_file(ufile):
-                    return (False, u"Update %s failed.  Please check the error messages above, fix, and try again" % (ufile,))
+                retval, error = self.run_file(ufile)
+                if not retval:
+                    return (False, error)
         return (True, None)
+    
+class PyVersionCheck(VersionCheck):
+    extension = 'py'
+    
+    def __init__(self, db, script_dir):
+        if self.__class__.__name__ == "PyVersionCheck":
+            raise ValueError("'PyVersionCheck' is a virtual class and should not be instantiated directly")
+        super(PyVersionCheck, self).__init__(db, script_dir)
+    
+    def run_file(self, ufile):
+        
+        import imp
+        uname = os.path.basename(ufile)
+        if ufile.endswith('.py'):
+            uname = uname[:-3]
+        try:
+            f = open(ufile, 'U')
+        except:
+            return (False, u"Error opening %s" % (ufile,))
+        try:
+            update = imp.load_module('update', f, ufile, ('.py', 'U', 1))
+            update.update(self.db)
+            cur_ver = self.db.session.query(Version).get(self.uuid)
+            if cur_ver.Version != self.version:
+                return (False, u"Module %s didn't update version in database" % (ufile,))
+            return True
+        except:
+            return (False, u"Error loading update module %s" % (ufile,))
+        finally:
+            f.close()
+        
