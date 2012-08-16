@@ -144,11 +144,11 @@ class PyVersionCheck(VersionCheck):
         except:
             return (False, u"Error opening %s" % (ufile,))
         try:
-            update = imp.load_module('update', f, ufile, ('.py', 'U', 1))
-            update.update(self.db)
+            upgrade = imp.load_module('upgrade', f, ufile, ('.py', 'U', 1))
+            upgrade.upgrade(self.db)
             cur_ver = self.db.session.query(Version).get(self.uuid)
             if cur_ver.Version != self.version:
-                return (False, u"Module %s didn't update version in database" % (ufile,))
+                return (False, u"Module %s didn't upgrade version in database" % (ufile,))
             return True
         except:
             return (False, u"Error loading update module %s" % (ufile,))
