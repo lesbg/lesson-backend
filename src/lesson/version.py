@@ -110,7 +110,9 @@ class VersionCheck(object):
             raise ValueError("Database variable 'db' isn't set")
         if self.uuid is None:
             raise ValueError("UUID variable 'uuid' isn't set")
-        cur_ver = self.db.session.query(Version).get(self.uuid)
+        session = self.db.create_session()
+        cur_ver = session.query(Version).get(self.uuid)
+        session.close()
         if cur_ver.Version > self.version:
             return (False, u"The %s version in the database is %i, while our version is %i.  Please upgrade module %s" % (cur_ver.Type, cur_ver.Version, self.version, cur_ver.Type))
         elif cur_ver.Version < self.version:
@@ -146,7 +148,9 @@ class PyVersionCheck(VersionCheck):
         try:
             upgrade = imp.load_module('upgrade', f, ufile, ('.py', 'U', 1))
             upgrade.upgrade(self.db)
-            cur_ver = self.db.session.query(Version).get(self.uuid)
+            session = self.db.create_session()
+            cur_ver = session.query(Version).get(self.uuid)
+            session.close()
             if cur_ver.Version != self.version:
                 return (False, u"Module %s didn't upgrade version in database" % (ufile,))
             return True
