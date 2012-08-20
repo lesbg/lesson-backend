@@ -1,4 +1,4 @@
-uuid = u"7bb2302a-a003-11e1-9b06-00163e9a5f9b" #@InvalidName
+uuid = u"7bb2302a-a003-11e1-9b06-00163e9a5f9b"
 old_version = 1
 new_version = 2
 
