@@ -1,4 +1,4 @@
-uuid = u"7bb2302a-a003-11e1-9b06-00163e9a5f9b"
+uuid = u"7bb2302a-a003-11e1-9b06-00163e9a5f9b" #@InvalidName
 old_version = 1
 new_version = 2
 
@@ -93,8 +93,7 @@ if __name__ == "__main__":
     class Session(object):
         def __init__(self, engine, **engine_opts):
             self.engine = create_engine(engine, **engine_opts)
-            self.session_type = sessionmaker(bind=self.engine)
-            self.session = self.session_type() 
+            self.create_session = sessionmaker(bind=self.engine) 
     
     db = Session(u'sqlite://')
     version.create(db.engine)

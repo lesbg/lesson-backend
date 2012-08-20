@@ -44,6 +44,7 @@ class VersionCheck(object):
     version = None
     auto_update = True
     extension = 'sh'
+    prefix= ''
     
     def __init__(self, db, script_dir=None):
         if self.__class__.__name__ == "VersionCheck":
@@ -72,8 +73,12 @@ class VersionCheck(object):
             return (False, u"Error running %s" % (ufile,))
     
     def __check_file(self, start_ver, stop_ver):
+        prefix = self.prefix
+        if self.prefix != '':
+            prefix = self.prefix + '-'
+            
         ufile = os.path.join("%s" % (self.script_dir,),
-                             "%s-update-%i-%i.%s" % (self.uuid, start_ver, stop_ver, self.extension))
+                             "%s%s-update-%i-%i.%s" % (prefix, self.uuid, start_ver, stop_ver, self.extension))
         
         # Check whether update exists for start_ver -> stop_ver
         if self.check_file(ufile):
@@ -110,7 +115,9 @@ class VersionCheck(object):
             raise ValueError("Database variable 'db' isn't set")
         if self.uuid is None:
             raise ValueError("UUID variable 'uuid' isn't set")
-        cur_ver = self.db.session.query(Version).get(self.uuid)
+        session = self.db.create_session()
+        cur_ver = session.query(Version).get(self.uuid)
+        session.close()
         if cur_ver.Version > self.version:
             return (False, u"The %s version in the database is %i, while our version is %i.  Please upgrade module %s" % (cur_ver.Type, cur_ver.Version, self.version, cur_ver.Type))
         elif cur_ver.Version < self.version:
@@ -127,6 +134,7 @@ class VersionCheck(object):
     
 class PyVersionCheck(VersionCheck):
     extension = 'py'
+    prefix = 'python'
     
     def __init__(self, db, script_dir):
         if self.__class__.__name__ == "PyVersionCheck":
@@ -146,7 +154,9 @@ class PyVersionCheck(VersionCheck):
         try:
             upgrade = imp.load_module('upgrade', f, ufile, ('.py', 'U', 1))
             upgrade.upgrade(self.db)
-            cur_ver = self.db.session.query(Version).get(self.uuid)
+            session = self.db.create_session()
+            cur_ver = session.query(Version).get(self.uuid)
+            session.close()
             if cur_ver.Version != self.version:
                 return (False, u"Module %s didn't upgrade version in database" % (ufile,))
             return True
