@@ -15,7 +15,7 @@
 #
 # Copyright (C) 2012 Jonathan Dieter <jdieter@lesbg.com>
 
-from model.database import Version
+from model.core import Version
 import subprocess, os.path
 
 class VersionCheck(object):

@@ -21,7 +21,7 @@ import sqlalchemy.orm
 from sqlalchemy.orm import class_mapper, object_mapper, aliased
 
 from render_commands import RenderCom
-from model import database
+import model
 from controller import password
 from controller.permission import Permission
 
@@ -33,7 +33,7 @@ import sys
 
 from version import VersionCheck
 
-from model.database import User
+from model.core import User
 
 from error import *
 
@@ -56,7 +56,7 @@ class _GlobalData:
         self.config = config.get_config()
         self.engine = unicode(self.config.get('Main', 'database'))
         self.script_dir = self.config.get('Main', 'script dir')
-        self.db = database.Session(self.engine, pool_recycle=3600)
+        self.db = model.Session(self.engine, pool_recycle=3600)
         self.log = log.Log(self.db)
 
 _global_data = _GlobalData()
@@ -335,7 +335,7 @@ class Page:
                 # Extract link table and key from link section
                 (table, link_table, key) = self.__split_url_segment(item)
                 
-                for x in database.TableTop.__subclasses__(): #@UndefinedVariable
+                for x in model.TableTop.__subclasses__(): #@UndefinedVariable
                     if hasattr(x, "Link") and x.Link == table:                        
                         self.filters.append({'table_class': x, 'table': table, 'link_table': link_table, 'key': key})
                         step = 2
@@ -714,9 +714,6 @@ def __version_check(module):
     don't, only show error page
     """
     for version_class in module.__subclasses__(): #@UndefinedVariable
-        print "!!!"
-        print version_class
-        print "!!!"
         if len(version_class.__subclasses__()) > 0:
             if not __version_check(version_class):
                 return False
@@ -733,7 +730,7 @@ def __generate_auto_db():
     """
     Automatically create pages from database entries
     """
-    for x in database.TableTop.__subclasses__(): #@UndefinedVariable
+    for x in model.TableTop.__subclasses__(): #@UndefinedVariable
         if hasattr(x, 'Link'):
             globals()['Auto%sListPage' % (x.__name__,)] = type('Auto%sListPage' % (x.__name__,), (ListPage,), {'table': x, 'priority': 90, 'url': '/%s' % (x.Link,), 'base_link': x.Link})
             globals()['Auto%sObjectPage' % (x.__name__,)] = type('Auto%sObjectPage' % (x.__name__,), (ObjectPage,), {'table': x, 'priority': 90, 'url': '/%s/([^/]*)' % (x.Link,), 'base_link': x.Link})

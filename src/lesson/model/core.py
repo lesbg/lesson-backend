@@ -1,4 +1,6 @@
-# lesson/database.py
+# lesson/model/core.py
+#
+# Core database configuration
 #
 # This file is part of LESSON.  LESSON is free software: you can
 # redistribute it and/or modify it under the terms of the GNU General Public
@@ -16,53 +18,18 @@
 # Copyright (C) 2012 Jonathan Dieter <jdieter@lesbg.com>
 
 from sqlalchemy import ForeignKey
-from sqlalchemy.orm import relationship, backref, object_mapper
+from sqlalchemy.orm import relationship, backref
 
 from sqlalchemy import Column, Integer, Unicode, Date, String, DateTime, UnicodeText, Float, LargeBinary
 from sqlalchemy.ext.declarative import declarative_base
 
 from datetime import datetime
 
+from model import TableTop
+
 Base = declarative_base()
 
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
-
-class Session(object):
-    def __init__(self, engine, **engine_opts):
-        self.engine = create_engine(engine, **engine_opts)
-        self.create_session = sessionmaker(bind=self.engine)  
-
-class TableTop(object):
-    def _get_list_link(self):
-        if not hasattr(self, "Link"):
-            return None
-        return u"%s" % (self.Link)
-    
-    def _get_obj_link(self):
-        if self.get_list_link() is None:
-            return None
-        return u"%s/%s" % (self.Link, unicode(self.get_primary_key()[1]))
-
-    def _get_attr_link(self):
-        if self.get_obj_link() is None:
-            return None
-        return u"%s/attributes" % (self.get_obj_link())
-
-    def get_list_link(self):
-        return self._get_list_link()
-    
-    def get_obj_link(self):
-        return self._get_obj_link()
-    
-    def get_attr_link(self):
-        return self._get_attr_link()
-    
-    def get_primary_key(self):
-        mapper = object_mapper(self)
-        return (unicode(mapper.primary_key[0].key), mapper.primary_key_from_instance(self)[0])
-
-class Config(Base):
+class Config(Base, TableTop):
     __tablename__ = 'config'
     
     ConfigIndex = Column(Integer, nullable=False, primary_key=True)
@@ -73,7 +40,7 @@ class Config(Base):
     Link        = "config"
     
     def __repr__(self):
-        return u"<Config('%s: %s')>" % (self.Key, self.UUID)
+        return u"<Config('%s: %s')>" % (self.Key, self.Value)
     
     def __init__(self, uuid, key, value):
         self.UUID  = uuid

@@ -17,7 +17,7 @@
 #
 # Copyright (C) 2012 Jonathan Dieter <jdieter@lesbg.com>
 
-from model.database import Log as DBLog, LogIgnoreHost
+from model.core import Log as DBLog, LogIgnoreHost
 
 NONE  = 0
 ERROR = 1

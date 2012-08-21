@@ -16,7 +16,7 @@
 # Copyright (C) 2012 Jonathan Dieter <jdieter@lesbg.com>
 
 from render import ObjectPage, AttrPage
-from model.database import User
+from model.core import User
 
 class UserPage(ObjectPage):
     url = "/users/([^/]*)"
