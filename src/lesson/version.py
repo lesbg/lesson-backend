@@ -153,7 +153,7 @@ class PyVersionCheck(VersionCheck):
             session.close()
             if cur_ver.Version != self.version:
                 return (False, u"Module %s didn't upgrade version in database" % (ufile,))
-            return True
+            return (True, None)
         except:
             return (False, u"Error loading update module %s" % (ufile,))
         finally:

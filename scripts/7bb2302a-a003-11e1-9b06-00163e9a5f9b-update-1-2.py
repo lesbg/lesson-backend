@@ -17,28 +17,36 @@
 #
 # Copyright (C) 2012 Jonathan Dieter <jdieter@lesbg.com>
 
-uuid = u"7bb2302a-a003-11e1-9b06-00163e9a5f9b"
+uuid = u'7bb2302a-a003-11e1-9b06-00163e9a5f9b'
 old_version = 1
 new_version = 2
 
-def get_metadata():
-    from sqlalchemy.ext.declarative import declarative_base
-    
-    Base = declarative_base()
-    
-    class LogIgnoreHost(Base):
-        __tablename__ = u'log_ignore_host'
-        
-        LogIgnoreHostIndex = Column(Integer, nullable=False, primary_key=True)
-        HostAddr           = Column(Unicode(32), nullable=False)
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy import Table, MetaData
+from sqlalchemy import Column, Integer, Unicode
 
-    return Base
+Base = declarative_base()
 
+class LogIgnoreHost(Base):
+    __tablename__ = u'log_ignore_host'
+    
+    LogIgnoreHostIndex = Column(Integer, nullable=False, primary_key=True)
+    HostAddr           = Column(Unicode(32), nullable=False)
+
+class Config(Base):
+    __tablename__ = u'config'
+    
+    ConfigIndex = Column(Integer, nullable=False, primary_key=True)
+    UUID        = Column(Unicode(36), nullable=False)
+    Key         = Column(Unicode(50), nullable=False)
+    Value       = Column(Unicode(1024), default=None)
+    
 def upgrade(db):
-    precheck_upgrade(db) # Must be at beginning of upgrade script 
+    precheck_upgrade(db) # Must be at beginning of upgrade script
     
-    Base = get_metadata()    
     Base.metadata.create_all(db.engine)
+    db.engine.execute(LogIgnoreHost.__table__.insert().values(HostAddr=u'localhost'))
+    db.engine.execute(Config.__table__.insert().values(UUID=uuid, Key=u'log_level', Value=3))
     
     version_upgrade(db) # Must be at end of upgrade script, and only run after
                         # upgrade is successful 
@@ -46,8 +54,7 @@ def upgrade(db):
     
 def downgrade(db):
     precheck_downgrade(db) # Must be at beginning of downgrade script 
-    
-    Base = get_metadata()    
+        
     Base.metadata.drop_all(db.engine)
     
     version_downgrade(db) # Must be at end of upgrade script, and only run
@@ -56,9 +63,6 @@ def downgrade(db):
 ########################################
 ##### Ignore everything below this #####
 ########################################
-from sqlalchemy import Table, MetaData
-from sqlalchemy import Column, Integer, Unicode
-
 from sqlalchemy.sql import select
 
 metadata = MetaData()
@@ -112,13 +116,13 @@ if __name__ == "__main__":
     class Session(object):
         def __init__(self, engine, **engine_opts):
             self.engine = create_engine(engine, **engine_opts)
-            self.create_session = sessionmaker(bind=self.engine) 
+            self.create_session = sessionmaker(bind=self.engine)
     
     db = Session(u'sqlite://')
     version.create(db.engine)
-    db.engine.execute(version.insert().values(UUID=uuid, Version=old_version, Type=""))
+    db.engine.execute(version.insert().values(UUID=uuid, Version=old_version, Type=u""))
     upgrade(db)
     downgrade(db)
     result = db.engine.execute(select([version], version.c.UUID == uuid))
     if result.fetchone()[u'Version'] != old_version:
-        raise ValueError("After upgrade/downgrade process, database has been changed")
+        raise ValueError(u"After upgrade/downgrade process, database has been changed")

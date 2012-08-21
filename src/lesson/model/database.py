@@ -31,8 +31,7 @@ from sqlalchemy.orm import sessionmaker
 class Session(object):
     def __init__(self, engine, **engine_opts):
         self.engine = create_engine(engine, **engine_opts)
-        self.session_type = sessionmaker(bind=self.engine)
-        self.session = self.session_type()  
+        self.create_session = sessionmaker(bind=self.engine)  
 
 class TableTop(object):
     def _get_list_link(self):
@@ -62,6 +61,24 @@ class TableTop(object):
     def get_primary_key(self):
         mapper = object_mapper(self)
         return (unicode(mapper.primary_key[0].key), mapper.primary_key_from_instance(self)[0])
+
+class Config(Base):
+    __tablename__ = 'config'
+    
+    ConfigIndex = Column(Integer, nullable=False, primary_key=True)
+    UUID        = Column(Unicode(36), nullable=False)
+    Key         = Column(Unicode(50), nullable=False)
+    Value       = Column(Unicode(1024), default=None)
+    
+    Link        = "config"
+    
+    def __repr__(self):
+        return u"<Config('%s: %s')>" % (self.Key, self.UUID)
+    
+    def __init__(self, uuid, key, value):
+        self.UUID  = uuid
+        self.Key   = key
+        self.Value = value
 
 class Version(Base, TableTop):
     """
@@ -470,11 +487,9 @@ class Log(Base, TableTop):
     
     LogIndex      = Column(Integer(11), nullable=False, primary_key=True)
     Username      = Column(Unicode(50), nullable=False)
-    Code          = Column(Integer(11), nullable=False)
     Level         = Column(Integer(11), nullable=False)
     Time          = Column(DateTime(), nullable=False)
     Comment       = Column(UnicodeText())
-    Session       = Column(Integer(11))
     Page          = Column(UnicodeText(), nullable=False)
     RemoteHost    = Column(UnicodeText(), nullable=False)
     
@@ -485,16 +500,26 @@ class Log(Base, TableTop):
     def __repr__(self):
         return u"<Log('%i %s')>" % (self.Code, self.Username)
     
-    def __init__(self, username, code, level, page, remote_host, time=None, comment=None, session=None):
+    def __init__(self, page, username, level, remote_host, comment=None):
         self.Username       = username
-        self.Code           = code
         self.Level          = level
         self.Page           = page
         self.RemoteHost     = remote_host
         self.Comment        = comment
-        self.Session        = session
-        if time != None:
-            self.Time = time
-        else:
-            self.Time = datetime.now()
+        self.Time = datetime.now()
             
+class LogIgnoreHost(Base, TableTop):
+    __tablename__ = 'log_ignore_host'
+    
+    LogIgnoreHostIndex = Column(Integer(), nullable=False, primary_key=True)
+    HostAddr           = Column(Unicode(32), nullable=False)
+    
+    Link               = "ignore_hosts"
+    
+    def __repr__(self):
+        return u"<LogIgnoreHost('%s')>" % (self.HostAddr)
+
+    def __init__(self, host_addr):
+        if host_addr is None:
+            raise ValueError("Host address must be set")
+        self.HostAddr = host_addr
