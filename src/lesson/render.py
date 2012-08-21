@@ -27,6 +27,8 @@ from controller.permission import Permission
 
 import controller.core_version #@UnusedImport
 
+from controller import log
+
 import sys
 
 from version import VersionCheck
@@ -35,7 +37,7 @@ from model.database import User
 
 from error import *
 
-import config
+from controller import config
 
 from recursive_import import recursive_import
 
@@ -52,9 +54,10 @@ class _GlobalData:
         # self.store = None
         self.rendercom = None
         self.config = config.get_config()
-        url = unicode(self.config.get('Main', 'database'))
-        self.db = database.Session(url, pool_recycle=3600)
-
+        self.engine = unicode(self.config.get('Main', 'database'))
+        self.script_dir = self.config.get('Main', 'script dir')
+        self.db = database.Session(self.engine, pool_recycle=3600)
+        self.log = log.Log(self.db)
 
 _global_data = _GlobalData()
 _global_data.rendercom = RenderCom()
@@ -167,10 +170,21 @@ class Page:
     query = None
     errno = None
     error = None
+    error_level = None
+    log_error = True
     status = None
+    session = None
     
     def __init__(self):
-        self.db = _global_data.db
+        self.db  = _global_data.db
+        self._log = _global_data.log
+    
+    def log(self, comment, level = None, username = None):
+        if username is None:
+            username = self.user.Username
+        if level is None:
+            level = log.DEBUG
+        self._log.log(web.ctx, web.ctx.fullpath.replace("/" + self.prefix + "/", ""), username, level, comment)
         
     @mimerender(
         default = 'html',
@@ -189,6 +203,8 @@ class Page:
             else:
                 self.status = web_error[400]
                 self.error += u'\nIn addition, the web server return unknown error code %i' % (self.errno,)
+            if self.log_error:
+                self.log(self.error, self.error_level)
             return {'errno': unicode(self.status), 'error': self.error}
         if len(args) == 1:
             if self.check_vars:
@@ -206,11 +222,16 @@ class Page:
         else:
             auth = re.sub('^Basic ','',auth)
             username,passwd = base64.decodestring(auth).split(':')
-            user = self.db.session.query(User).filter_by(Username=username).first()
-            if user is None or not password.validate(passwd, user.Password):
+            user = self.session.query(User).filter_by(Username=username).first()
+            if user is None:
+                self.log(u"Non-existent username: %s" % (username,), log.ERROR, username)
+                return False
+            if not password.validate(passwd, user.Password):
+                self.log(u"Invalid password for username: %s" % (username,), log.ERROR, username)
                 return False
             self.user = user
             self.validator = Permission(user)
+            
             return True
     
     def gen_link(self, page):
@@ -225,12 +246,14 @@ class Page:
     def check_permissions(self):
         if not self.logged():
             web.header('WWW-Authenticate','Basic realm="LESSON login"')
-            self.errno = UNAUTHORIZED
-            self.error = u"You must log in before accessing this page"
+            self.errno     = UNAUTHORIZED
+            self.error     = u"You must log in before accessing this page"
+            self.log_error = False
             return
         if hasattr(self, 'permission') and not self.validator.has_permission(self.permission, self.permission_args):
-            self.errno = FORBIDDEN
-            self.error = u"Access to this page is denied"
+            self.errno       = FORBIDDEN
+            self.error       = u"Access to this page is denied"
+            self.error_level = log.ERROR
             return
         return None
         
@@ -284,7 +307,7 @@ class Page:
     def __build_filter_url(self):
         """
         Build filter url from filters.  If filters has been run through
-        self.__check_filters, filter url is canonical.
+        self._gen_default_query, filter url is canonical.
         """
         filter_url = ""
         for ffilter in self.filters:
@@ -339,7 +362,7 @@ class Page:
             return
         
         self.filters.reverse()
-        query = self.db.session.query(self.table)
+        query = self.session.query(self.table)
         
         used_table_list = [(class_mapper(self.table), self.table)]
         for item in self.filters:
@@ -423,6 +446,9 @@ class Page:
         return retval
     
     def _parse(self, procedure, args, kwargs):
+        # Open database session
+        self.session = self.db.create_session()
+        
         (args, kwargs) = self._strip_prefix(args, kwargs)
         
         # Check permissions
@@ -435,7 +461,7 @@ class Page:
         # Verify that prefix is in multiples of two
         if len(self.prefix.split('/')) % 2 != 0 and self.prefix != '':
             self.errno = 400
-            self.error = u"Filters must be in the form /table[@linktable][$foreign_key]/primary_key"
+            self.error = u"Filters must be in the form /table[@linktable][$foreign_key]/primary_key, but yours is %s" % (self.prefix,)
             return self._render()
         
         # Verify that prefix is a valid filter
@@ -449,7 +475,10 @@ class Page:
             return self._render()
         
         retval = self._render(procedure(*args, **kwargs))
-                    
+        self.log("Accessed page")
+        
+        # Close database session
+        self.session.close()            
         return retval
             
     # Pseudo-procedures for base class page.  These should be overridden by any
@@ -573,7 +602,7 @@ class ObjectPage(Page):
 
         datalist = [{u'name': u'Attributes', u'link': self.gen_link(self.base_link + '/' + index + '/attributes')}]
 
-        query = self.db.session.query(self.table).get(index)
+        query = self.session.query(self.table).get(index)
         
         if query is None:
             self.errno = NOT_FOUND
@@ -589,7 +618,7 @@ class ObjectPage(Page):
                     continue
                 
                 remote = r.remote_side[0]
-                test = self.db.session.query(remote.table).filter(remote == index).first()
+                test = self.session.query(remote.table).filter(remote == index).first()
                 if test is None:
                     continue
                 
@@ -665,10 +694,11 @@ class AttrPage(Page):
 
 class ServerError(Page):
     error_msg = None
-    
-    def get(self, path):
-        web.ctx.status = u'500 Internal Server Error'
-        return {u'Code': 500, u'Message': self.error_msg}
+
+    def get(self):
+        self.errno = INTERNAL_ERROR
+        self.error = self.error_msg
+        return
 
 class Redirect(Page):
     url = '/(.*)/'
@@ -678,18 +708,25 @@ class Redirect(Page):
     def GET(self, path):
         web.seeother('/' + path)
     
-def __version_check():
+def __version_check(module):
     """
     Check whether all module versions match versions in database.  If they
     don't, only show error page
     """
-    for version_class in VersionCheck.__subclasses__(): #@UndefinedVariable
-        (good_version, error) = version_class(_global_data.db).check_version()
-        if not good_version:
-            globals()['ServerErrorOn'] = type('ServerErrorOn', (ServerError,), {'error_msg': error})
-            urls.append('/(.*)')
-            urls.append('ServerErrorOn')
-            return False 
+    for version_class in module.__subclasses__(): #@UndefinedVariable
+        print "!!!"
+        print version_class
+        print "!!!"
+        if len(version_class.__subclasses__()) > 0:
+            if not __version_check(version_class):
+                return False
+        else:
+            (good_version, error) = version_class(_global_data.db, _global_data.script_dir).check_version()
+            if not good_version:
+                globals()['ServerErrorOn'] = type('ServerErrorOn', (ServerError,), {'error_msg': error})
+                urls.append('/(.*)')
+                urls.append('ServerErrorOn')
+                return False 
     return True
   
 def __generate_auto_db():
@@ -704,7 +741,7 @@ def __generate_auto_db():
 
 __import__('view')
 
-if __version_check():
+if __version_check(VersionCheck):
     recursive_import(os.path.join(os.path.dirname(__file__), os.path.join('view', '__init__.py')))
     
     __generate_auto_db()
