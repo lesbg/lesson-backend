@@ -494,7 +494,6 @@ class Log(Base, TableTop):
         return u"<Log('%i - %s - %s')>" % (self.Level, self.Username, self.Comment)
 
     def __init__(self, Page, User, Level, RemoteHost, Comment=None):
-        print sys.modules[__name__]
         if isinstance(User, unicode):
             username = User
         elif isinstance(User, sys.modules[__name__].User):

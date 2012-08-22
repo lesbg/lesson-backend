@@ -65,7 +65,6 @@ class Log:
             else:
                 remote_host = '%s via %s' % (remote_host, ctx.environ['HTTP_X_FORWARDED_FOR'])
 
-
         if level <= record_level:
             new_log = DBLog(page, user, level, remote_host, comment)
             session.add(new_log)
