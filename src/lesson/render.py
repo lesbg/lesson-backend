@@ -168,7 +168,7 @@ class Page:
         self._log = _global_data.log
     
     def log(self, comment, level = None):
-        username = self.user.Username
+        user = self.user
         if level is None:
             if hasattr(self, "log_level") and self.log_level is not None:
                 level = self.log_level
@@ -177,7 +177,7 @@ class Page:
         record_level = log.INFO
         if hasattr(self, 'record_log_level') and self.record_log_level is not None:
             record_level = self.record_log_level
-        self._log.log(web.ctx, web.ctx.fullpath.replace("/" + self.prefix + "/", ""), username, level, comment, record_level)
+        self._log.log(web.ctx, web.ctx.fullpath.replace("/" + self.prefix + "/", ""), user, level, comment, record_level)
     
     def get_config(self, key, fallback=True):
         """

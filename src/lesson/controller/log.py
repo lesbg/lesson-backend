@@ -17,7 +17,7 @@
 #
 # Copyright (C) 2012 Jonathan Dieter <jdieter@lesbg.com>
 
-from model.core import Log as DBLog, LogIgnoreHost
+from model.core import Log as DBLog, LogIgnoreHost, User
 
 NONE  = 0
 ERROR = 1
@@ -32,7 +32,14 @@ class Log:
     def __init__(self, db):
         self.db = db
         
-    def log(self, ctx, page, username, level, comment, record_level=INFO):
+    def log(self, ctx, page, user, level, comment, record_level=INFO):
+        if isinstance(user, unicode):
+            username = user
+        elif isinstance(user, User):
+            username = user.Username
+        else:
+            raise TypeError("'user' must either be unicode string or model.core.User")
+        
         if level < 1:
             raise ValueError("Log level can't be log.NONE or negative")
 
@@ -59,7 +66,7 @@ class Log:
         
         
         if level <= record_level:
-            new_log = DBLog(page, username, level, remote_host, comment)
+            new_log = DBLog(page, user, level, remote_host, comment)
             session.add(new_log)
             session.commit()
             session.close()
