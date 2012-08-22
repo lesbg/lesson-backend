@@ -17,7 +17,7 @@
 #
 # Copyright (C) 2012 Jonathan Dieter <jdieter@lesbg.com>
 
-uuid = '7bb2302a-a003-11e1-9b06-00163e9a5f9b'
+uuid = u'7bb2302a-a003-11e1-9b06-00163e9a5f9b'
 version = 2
 
 from sqlalchemy import ForeignKey

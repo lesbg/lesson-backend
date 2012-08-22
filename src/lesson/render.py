@@ -15,6 +15,8 @@
 #
 # Copyright (C) 2012 Jonathan Dieter <jdieter@lesbg.com>
 
+uuid = u'7bb2302a-a003-11e1-9b06-00163e9a5f9b'
+
 import web, re, base64, os.path
 import mimerender
 import sqlalchemy.orm
@@ -61,22 +63,6 @@ class _GlobalData:
 
 _global_data = _GlobalData()
 _global_data.rendercom = RenderCom()
-
-def __urls_from_url_dict():
-    del urls[:]
-    templist = []
-    for path, value in url_dict.items():
-        if value[2]:
-            templist.append((value[0], path, value[1]))
-        else:
-            templist.append((value[0], '/?(.*)' + path, value[1]))
-            #urls.append('/?(.*)' + path)
-    templist.sort()
-    for (order, path, module) in templist:
-        print order, path, module
-        urls.append(path) 
-        urls.append(module)
-    return
 
 def _append_url(string, priority, module, name, absolute):
     if not hasattr(string, 'strip'):
@@ -174,6 +160,7 @@ class Page:
     log_error = True
     status = None
     session = None
+    uuid = None
     
     def __init__(self):
         self.db  = _global_data.db
@@ -726,18 +713,19 @@ def __version_check(module):
                 return False 
     return True
 
-def __fill_uuid():
+def __fill_uuid(klass):
     """
-    Automatically fill in uuid for database classes based on uuid variable in
-    file.  Raise exception if UUID isn't set for any database.
+    Automatically fill in uuid for class based on uuid variable in file.  Raise
+    exception if UUID isn't set for any database.
     """
-    for x in model.TableTop.__subclasses__(): #@UndefinedVariable
-        if not hasattr(x, 'uuid') or x.uuid is None or x.uuid == "":
-            TempMod = __import__(x.__module__, fromlist=[''])
-            if hasattr(TempMod, 'uuid') and TempMod.uuid is not None and TempMod.uuid != "":
-                x.uuid = TempMod.uuid
-            else:
-                raise ValueError("Every database class must have its uuid either set in the class or at the top of the file for all classes in the file")
+    if not hasattr(klass, 'uuid') or klass.uuid is None or klass.uuid == "":
+        TempMod = __import__(klass.__module__, fromlist=[''])
+        if hasattr(TempMod, 'uuid') and TempMod.uuid is not None and TempMod.uuid != "":
+            klass.uuid = TempMod.uuid
+        else:
+            raise ValueError("Every database and view class must have its uuid either set in the class or at the top of the file for all classes in the file")
+    if isinstance(klass.uuid, str):
+        raise ValueError('UUID for %s.%s is not a unicode string' % (klass.__module__, klass.__name__))
         
 def __generate_auto_db():
     """
@@ -749,12 +737,35 @@ def __generate_auto_db():
             globals()['Auto%sObjectPage' % (x.__name__,)] = type('Auto%sObjectPage' % (x.__name__,), (ObjectPage,), {'table': x, 'priority': 90, 'url': '/%s/([^/]*)' % (x.Link,), 'base_link': x.Link, 'uuid': x.uuid})
             globals()['Auto%sAttrPage' % (x.__name__,)] = type('Auto%sAttrPage' % (x.__name__,), (AttrPage,), {'table': x, 'priority': 90, 'url': '/%s/([^/]*)/attributes' % (x.Link,), 'base_link': x.Link, 'uuid': x.uuid})
 
+def __urls_from_url_dict():
+    del urls[:]
+    templist = []
+    for path, value in url_dict.items():
+        if value[2]:
+            templist.append((value[0], path, value[1]))
+        else:
+            templist.append((value[0], '/?(.*)' + path, value[1]))
+            #urls.append('/?(.*)' + path)
+    templist.sort()
+    for (order, path, klass) in templist:
+        print order, path, klass
+        klasslist = klass.split('.')
+        klass_basename = klasslist[-1]
+        klass_module = ".".join(klasslist[:-1])
+        test = getattr(__import__(klass_module, globals(), locals(), klass_basename), klass_basename)
+        
+        __fill_uuid(test)
+        urls.append(path) 
+        urls.append(klass)
+    return
+
 __import__('view')
 
 if __version_check(VersionCheck):
     recursive_import(os.path.join(os.path.dirname(__file__), os.path.join('view', '__init__.py')))
     
-    __fill_uuid()
+    for x in model.TableTop.__subclasses__(): #@UndefinedVariable
+        __fill_uuid(x)
     
     __generate_auto_db()
         

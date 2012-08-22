@@ -15,6 +15,8 @@
 #
 # Copyright (C) 2012 Jonathan Dieter <jdieter@lesbg.com>
 
+uuid = u'7bb2302a-a003-11e1-9b06-00163e9a5f9b'
+
 from render import Page
 
 class IndexPage(Page):
