@@ -17,6 +17,8 @@
 
 from version import PyVersionCheck
 
+from model.core import uuid as InUUID, version as InVersion
+
 class CoreDBVersion(PyVersionCheck):
-    uuid = '7bb2302a-a003-11e1-9b06-00163e9a5f9b'
-    version = 2
+    uuid = InUUID
+    version = InVersion

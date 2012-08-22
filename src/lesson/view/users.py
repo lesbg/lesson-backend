@@ -20,7 +20,7 @@ from model.core import User
 
 class UserPage(ObjectPage):
     url = "/users/([^/]*)"
-
+    
     def get(self, username):
         # Check whether we have permission to access this user's information
         if not self.validator.has_permission('user_info', username):

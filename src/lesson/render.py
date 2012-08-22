@@ -725,21 +725,36 @@ def __version_check(module):
                 urls.append('ServerErrorOn')
                 return False 
     return True
-  
+
+def __fill_uuid():
+    """
+    Automatically fill in uuid for database classes based on uuid variable in
+    file.  Raise exception if UUID isn't set for any database.
+    """
+    for x in model.TableTop.__subclasses__(): #@UndefinedVariable
+        if not hasattr(x, 'uuid') or x.uuid is None or x.uuid == "":
+            TempMod = __import__(x.__module__, fromlist=[''])
+            if hasattr(TempMod, 'uuid') and TempMod.uuid is not None and TempMod.uuid != "":
+                x.uuid = TempMod.uuid
+            else:
+                raise ValueError("Every database class must have its uuid either set in the class or at the top of the file for all classes in the file")
+        
 def __generate_auto_db():
     """
     Automatically create pages from database entries
     """
     for x in model.TableTop.__subclasses__(): #@UndefinedVariable
         if hasattr(x, 'Link'):
-            globals()['Auto%sListPage' % (x.__name__,)] = type('Auto%sListPage' % (x.__name__,), (ListPage,), {'table': x, 'priority': 90, 'url': '/%s' % (x.Link,), 'base_link': x.Link})
-            globals()['Auto%sObjectPage' % (x.__name__,)] = type('Auto%sObjectPage' % (x.__name__,), (ObjectPage,), {'table': x, 'priority': 90, 'url': '/%s/([^/]*)' % (x.Link,), 'base_link': x.Link})
-            globals()['Auto%sAttrPage' % (x.__name__,)] = type('Auto%sAttrPage' % (x.__name__,), (AttrPage,), {'table': x, 'priority': 90, 'url': '/%s/([^/]*)/attributes' % (x.Link,), 'base_link': x.Link})
+            globals()['Auto%sListPage' % (x.__name__,)] = type('Auto%sListPage' % (x.__name__,), (ListPage,), {'table': x, 'priority': 90, 'url': '/%s' % (x.Link,), 'base_link': x.Link, 'uuid': x.uuid})
+            globals()['Auto%sObjectPage' % (x.__name__,)] = type('Auto%sObjectPage' % (x.__name__,), (ObjectPage,), {'table': x, 'priority': 90, 'url': '/%s/([^/]*)' % (x.Link,), 'base_link': x.Link, 'uuid': x.uuid})
+            globals()['Auto%sAttrPage' % (x.__name__,)] = type('Auto%sAttrPage' % (x.__name__,), (AttrPage,), {'table': x, 'priority': 90, 'url': '/%s/([^/]*)/attributes' % (x.Link,), 'base_link': x.Link, 'uuid': x.uuid})
 
 __import__('view')
 
 if __version_check(VersionCheck):
     recursive_import(os.path.join(os.path.dirname(__file__), os.path.join('view', '__init__.py')))
+    
+    __fill_uuid()
     
     __generate_auto_db()
         
