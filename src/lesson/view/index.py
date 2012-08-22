@@ -22,6 +22,6 @@ from render import Page
 class IndexPage(Page):
     url = "/"
     url_absolute = True
-        
+
     def get(self):
         return {u'user': self.user.Username, u'firstname': self.user.FirstName, u'surname': self.user.Surname}

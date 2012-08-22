@@ -74,7 +74,7 @@ def _append_url(string, priority, module, name, absolute):
             if DEBUG:
                 print 'Replacing class for location %s' % (string,)
                 print '  %s -> %s.%s' % (url_dict[string][1], module, name)
-                    
+
     url_dict[string] = (priority, '%s.%s' % (module, name), absolute)
     return
 
@@ -85,7 +85,7 @@ def _is_listish(obj):
         return True
     else:
         return False
-    
+
 def _die_on_string(obj):
     if(_is_listish(obj)):
         if hasattr(obj, 'values'):
@@ -100,7 +100,7 @@ def _die_on_string(obj):
     else:
         if isinstance(obj, str):
             raise ValueError('All strings must be unicode strings')
-    
+
 def start(mode):
     app = web.application(urls, globals())
     if mode == "debug":
@@ -139,11 +139,11 @@ class _ActionMetaClass(type):
                         _append_url(item, priority, klass.__module__, name, absolute)
             else:
                 _append_url(obj, priority, klass.__module__, name, absolute)
-    
+
 class Page:
-    
+
     __metaclass__ = _ActionMetaClass
-    
+
     table = None
     priority = 80
     user = None
@@ -162,12 +162,12 @@ class Page:
     status = None
     session = None
     uuid = None
-    
+
     def __init__(self):
-        self.db  = _global_data.db
+        self.db = _global_data.db
         self._log = _global_data.log
-    
-    def log(self, comment, level = None):
+
+    def log(self, comment, level=None):
         user = self.user
         if level is None:
             if hasattr(self, "log_level") and self.log_level is not None:
@@ -178,7 +178,7 @@ class Page:
         if hasattr(self, 'record_log_level') and self.record_log_level is not None:
             record_level = self.record_log_level
         self._log.log(web.ctx, web.ctx.fullpath.replace("/" + self.prefix + "/", ""), user, level, comment, record_level)
-    
+
     def get_config(self, key, fallback=True):
         """
         Return config value of 'key'.  If config value doesn't exist, return
@@ -191,15 +191,15 @@ class Page:
         Set config 'key' to 'value'.
         """
         return config.set_config(self.session, self.uuid, key, value)
-    
+
     @mimerender(
-        default = 'html',
-        override_input_key = 'format',
-        html = _global_data.rendercom.render_html,
-        xml  = _global_data.rendercom.render_xml,
-        json = _global_data.rendercom.render_json,
-        txt  = _global_data.rendercom.render_txt,
-        csv  = _global_data.rendercom.render_csv
+        default='html',
+        override_input_key='format',
+        html=_global_data.rendercom.render_html,
+        xml=_global_data.rendercom.render_xml,
+        json=_global_data.rendercom.render_json,
+        txt=_global_data.rendercom.render_txt,
+        csv=_global_data.rendercom.render_csv
     )
     def _render(self, *args, **kwargs):
         if self.errno is not None:
@@ -220,14 +220,14 @@ class Page:
             return args[0]
         else:
             raise ValueError('Too many arguments.  This should be impossible')
-    
+
     def logged(self):
         auth = web.ctx.env.get('HTTP_AUTHORIZATION') #@UndefinedVariable
         if auth is None:
             return False
         else:
-            auth = re.sub('^Basic ','',auth)
-            username,passwd = base64.decodestring(auth).split(':')
+            auth = re.sub('^Basic ', '', auth)
+            username, passwd = base64.decodestring(auth).split(':')
             user = self.session.query(User).filter_by(Username=username).first()
             if user is None:
                 self.log(u"Non-existent username: %s" % (username,), log.ERROR, username)
@@ -237,9 +237,9 @@ class Page:
                 return False
             self.user = user
             self.validator = Permission(user)
-            
+
             return True
-    
+
     def gen_link(self, page):
         """
         Generate absolute url from app relative url
@@ -247,50 +247,50 @@ class Page:
         if page.startswith('/'):
             page = page[1:]
         page = '%s/%s' % (web.ctx.home, page)
-        return page        
-    
+        return page
+
     def check_permissions(self):
         if not self.logged():
-            web.header('WWW-Authenticate','Basic realm="LESSON login"')
-            self.errno     = UNAUTHORIZED
-            self.error     = u"You must log in before accessing this page"
+            web.header('WWW-Authenticate', 'Basic realm="LESSON login"')
+            self.errno = UNAUTHORIZED
+            self.error = u"You must log in before accessing this page"
             self.log_error = False
             return
         if hasattr(self, 'permission') and not self.validator.has_permission(self.permission, self.permission_args):
-            self.errno       = FORBIDDEN
-            self.error       = u"Access to this page is denied"
+            self.errno = FORBIDDEN
+            self.error = u"Access to this page is denied"
             self.error_level = log.ERROR
             return
         return None
-        
+
     def _strip_prefix(self, args, kwargs):
         if len(args) > 0:
             self.prefix = args[0]
             args = tuple(args[1:])
-            
+
         elif kwargs.has_key('prefix'):
             self.prefix = kwargs['prefix']
             del kwargs['prefix']
-            
+
         # Strip leading and trailing slashes from prefix
         if self.prefix is None:
             self.prefix = u""
         self.prefix = self.prefix.strip('/')
-        
+
         return args, kwargs
-    
+
     def __split_url_segment(self, segment):
         """
         Split a url segment in form table@link_table#key into tuple of (table,
         link_table, key) where link_table and key may be None
         """
-        
+
         # This would probably be easier as a regex, but I have no idea how to
         # make this work where the order of link_table and key doesn't matter
         x = segment.find('@')
         y = segment.find('$')
         link_table = None
-        key       = None
+        key = None
         if x > -1:
             if x < y:
                 link_table = segment[x + 1:y]
@@ -301,15 +301,15 @@ class Page:
                 key = segment[y + 1: x]
             else:
                 key = segment[y + 1:]
-        
+
         table = segment
         if x > -1 and (x < y or y == -1):
             table = segment[:x]
         elif y > -1 and (y < x or x == -1):
             table = segment[:y]
-            
+
         return (table, link_table, key)
-    
+
     def __build_filter_url(self):
         """
         Build filter url from filters.  If filters has been run through
@@ -324,25 +324,25 @@ class Page:
                 filter_url += "$" + ffilter['key']
             filter_url += "/" + ffilter['value']
         return filter_url[1:]
-    
+
     def _get_filters(self):
         """
         Work out SQL filters from self.prefix with very little error checking
         """
         filter_list = self.prefix.split('/')
         self.filters = []
-        
+
         if filter_list == [u'']:
             return
-        
+
         step = 1
         for item in filter_list:
             if step == 1:
                 # Extract link table and key from link section
                 (table, link_table, key) = self.__split_url_segment(item)
-                
+
                 for x in model.TableTop.__subclasses__(): #@UndefinedVariable
-                    if hasattr(x, "Link") and x.Link == table:                        
+                    if hasattr(x, "Link") and x.Link == table:
                         self.filters.append({'table_class': x, 'table': table, 'link_table': link_table, 'key': key})
                         step = 2
                 if step != 2: # We didn't find any tables that matched
@@ -354,7 +354,7 @@ class Page:
             if step == 2:
                 self.filters[-1]['value'] = item
                 step = 1
-        
+
     def _gen_default_query(self):
         """
         Generate default query from self.table and filters.  Default query is
@@ -366,18 +366,18 @@ class Page:
         if self.table is None:
             self.query = None
             return
-        
+
         self.filters.reverse()
         query = self.session.query(self.table)
-        
+
         used_table_list = [(class_mapper(self.table), self.table)]
         for item in self.filters:
             if item['link_table'] is not None and hasattr(used_table_list[0][1], "Link") and item['link_table'] == used_table_list[0][1].Link:
                 item['link_table'] = None
-                
+
             foreign_key = None
             table = class_mapper(item['table_class'])
-            
+
             # Get linked table in relationship
             link_table = None
             if item['link_table'] is None:
@@ -395,14 +395,14 @@ class Page:
                     self.errno = 400
                     self.error = u"Unable to find link table %s" % item['link_table']
                     return
-            
+
             # Create alias if link_table is linked multiple times
             for old_table in used_table_list:
                 if old_table[1] == item['table_class']:
                     item['table_class'] = aliased(item['table_class'])
-                    
+
             used_table_list.insert(0, (table, item['table_class']))
-            
+
             # Get primary key in relationship
             count = 0
             for x in link_table.iterate_properties:
@@ -423,9 +423,9 @@ class Page:
             if foreign_key is None:
                 self.errno = 400
                 self.error = "There's no relationship between column %s in table %s and table %s" % (table.primary_key[0].key, item['table_class'].Link, link_table_class.Link)
-                return 
-            
-            primary_key = getattr(item['table_class'], table.primary_key[0].key)     
+                return
+
+            primary_key = getattr(item['table_class'], table.primary_key[0].key)
             query = query.join(item['table_class'], primary_key == foreign_key).filter(primary_key == item['value'])
         self.filters.reverse()
 
@@ -450,55 +450,55 @@ class Page:
         retval = self._parse(procedure, args, kwargs)
         web.ctx.status = self.status
         return retval
-    
+
     def _parse(self, procedure, args, kwargs):
         # Open database session
         self.session = self.db.create_session()
-        
+
         # Get DEBUG level
         self.record_log_level = self.get_config(u'log_level')
         if self.record_log_level is not None:
             self.record_log_level = int(self.record_log_level)
-        
+
         (args, kwargs) = self._strip_prefix(args, kwargs)
-        
+
         # Check permissions
         self.check_permissions()
-        
+
         # Immediately exit if we've hit a permissions error
         if self.errno is not None:
             return self._render()
-        
+
         # Verify that prefix is in multiples of two
         if len(self.prefix.split('/')) % 2 != 0 and self.prefix != '':
             self.errno = 400
             self.error = u"Filters must be in the form /table[@linktable][$foreign_key]/primary_key, but yours is %s" % (self.prefix,)
             return self._render()
-        
+
         # Verify that prefix is a valid filter
         self._get_filters()
         if self.errno is not None:
             return self._render()
-        
+
         # Generate default query
         self._gen_default_query()
         if self.errno is not None:
             return self._render()
-        
+
         retval = self._render(procedure(*args, **kwargs))
         self.log("Accessed page")
-        
+
         # Close database session
-        self.session.close()            
+        self.session.close()
         return retval
-            
+
     # Pseudo-procedures for base class page.  These should be overridden by any
     # child classes
     def get(self):
         self.errno = BAD_METHOD
         self.error = u"GET method doesn't exist for page class %s" % (self.__class__.__name__,)
         return
-    
+
     def push(self):
         self.errno = BAD_METHOD
         self.error = u"PUSH method doesn't exist for page class %s" % (self.__class__.__name__,)
@@ -508,7 +508,7 @@ class Page:
         self.errno = BAD_METHOD
         self.error = u"PUT method doesn't exist for page class %s" % (self.__class__.__name__,)
         return
-    
+
     def delete(self):
         self.errno = BAD_METHOD
         self.error = u"DELETE method doesn't exist for page class %s" % (self.__class__.__name__,)
@@ -519,16 +519,16 @@ class Page:
     def GET(self, *args, **kwargs):
         retval = self._set_status(self.get, args, kwargs)
         return retval
-    
+
     def PUSH(self, *args, **kwargs):
         return self._set_status(self.push, args, kwargs)
-    
+
     def PUT(self, *args, **kwargs):
         return self._set_status(self.put, args, kwargs)
-     
+
     def DELETE(self, *args, **kwargs):
         return self._set_status(self.delete, args, kwargs)
-  
+
 class ListPage(Page):
     permissions = 'show_list'
     table = Page.table
@@ -547,7 +547,7 @@ class ListPage(Page):
     status = Page.status
     session = Page.session
     uuid = Page.uuid
-            
+
     def get_list(self):
         if self.table is None:
             self.errno = NOT_FOUND
@@ -557,9 +557,9 @@ class ListPage(Page):
             self.errno = NOT_FOUND
             self.error = u"Table class %s doesn't have Link attribute" % (self.table.__class__.__name__)
             return
-        
+
         datalist = []
-                
+
         user_data = web.input(offset=self.offset, limit=self.limit)
         try:
             user_data.limit = int(user_data.limit)
@@ -579,16 +579,16 @@ class ListPage(Page):
 
         items = self.query.limit(user_data.limit).offset(user_data.offset)
         print items.statement
-        
+
         for item in items:
             (index, value) = item.get_primary_key()
             datalist.append({index: value, u'link': self.gen_link(self.prefix + '/' + item.get_obj_link())})
-            
+
         return {u'list': datalist}
-    
+
     def _get(self):
         return self.get_list()
-    
+
     def get(self):
         return self._get()
 
@@ -610,7 +610,7 @@ class ObjectPage(Page):
     status = Page.status
     session = Page.session
     uuid = Page.uuid
-    
+
     def get_links(self, index):
         if self.table is None:
             self.errno = NOT_FOUND
@@ -624,36 +624,36 @@ class ObjectPage(Page):
         datalist = [{u'name': u'Attributes', u'link': self.gen_link(self.base_link + '/' + index + '/attributes')}]
 
         query = self.session.query(self.table).get(index)
-        
+
         if query is None:
             self.errno = NOT_FOUND
             self.error = u"Unable to find primary key '%s' for table %s" % (index, self.table.Link)
             return
-        
+
         for r in object_mapper(query).iterate_properties:
             if not isinstance(r, sqlalchemy.orm.properties.RelationshipProperty):
                 continue
-            
+
             if r.direction.name == "MANYTOONE":
                 if not hasattr(r.argument.class_, "Link"):
                     continue
-                
+
                 remote = r.remote_side[0]
                 test = self.session.query(remote.table).filter(remote == index).first()
                 if test is None:
                     continue
-                
+
                 link = r.argument.class_.Link
                 datalist.append({u'name': unicode(r.key), u'link': self.gen_link(self.base_link + '/' + index + '/' + link)})
-        
+
         return {u'links': datalist}
-    
+
     def _get(self, index):
         return self.get_links(index)
-    
+
     def get(self, index):
         return self._get(index)
-        
+
 class AttrPage(Page):
     permissions = 'show_attributes'
     table = Page.table
@@ -672,27 +672,27 @@ class AttrPage(Page):
     status = Page.status
     session = Page.session
     uuid = Page.uuid
-    
+
     def get_attributes(self, index):
         if self.table is None:
             self.errno = NOT_FOUND
             self.error = u"No default table set for page class %s" % (self.__class__.__name__)
             return
-        
+
         if not hasattr(self.table, 'Link'):
             self.errno = NOT_FOUND
             self.error = u"Table class %s doesn't have Link attribute" % (self.table.__class__.__name__)
             return
-        
+
         if self.prefix != "":
             self.errno = INVALID
             self.error = u"Filters aren't allowed when getting attributes"
             return
-        
+
         datalist = []
-        
+
         query = self.query.get(index)
-        
+
         for r in query.__mapper__.iterate_properties:
             key = getattr(query, r.key)
             if isinstance(r, sqlalchemy.orm.properties.RelationshipProperty):
@@ -704,17 +704,17 @@ class AttrPage(Page):
                     datalist.append({u'name': unicode(r.key), u'value': None})
             else:
                 datalist.append({u'name': unicode(r.key), u'value': key})
-        
+
         if len(datalist) == 0:
             self.errno = NOT_FOUND
             self.error = u"Item %s has no attributes" % (index)
             return
-        
+
         return {u'attributes': datalist}
-    
+
     def _get(self, index):
         return self.get_attributes(index)
-    
+
     def get(self, index):
         return self._get(index)
 
@@ -730,10 +730,10 @@ class Redirect(Page):
     url = '/(.*)/'
     priority = 0
     url_absolute = True
-    
+
     def GET(self, path):
         web.seeother('/' + path)
-    
+
 def __version_check(module):
     """
     Check whether all module versions match versions in database.  If they
@@ -749,7 +749,7 @@ def __version_check(module):
                 globals()['ServerErrorOn'] = type('ServerErrorOn', (ServerError,), {'error_msg': error})
                 urls.append('/(.*)')
                 urls.append('ServerErrorOn')
-                return False 
+                return False
     return True
 
 def __fill_uuid(klass):
@@ -765,7 +765,7 @@ def __fill_uuid(klass):
             raise ValueError("Every database and view class must have its uuid either set in the class or at the top of the file for all classes in the file")
     if isinstance(klass.uuid, str):
         raise ValueError('UUID for %s.%s is not a unicode string' % (klass.__module__, klass.__name__))
-        
+
 def __generate_auto_db():
     """
     Automatically create pages from database entries
@@ -792,9 +792,9 @@ def __urls_from_url_dict():
         klass_basename = klasslist[-1]
         klass_module = ".".join(klasslist[:-1])
         test = getattr(__import__(klass_module, globals(), locals(), klass_basename), klass_basename)
-        
+
         __fill_uuid(test)
-        urls.append(path) 
+        urls.append(path)
         urls.append(klass)
     return
 
@@ -802,13 +802,13 @@ __import__('view')
 
 if __version_check(VersionCheck):
     recursive_import(os.path.join(os.path.dirname(__file__), os.path.join('view', '__init__.py')))
-    
+
     for x in model.TableTop.__subclasses__(): #@UndefinedVariable
         __fill_uuid(x)
-    
+
     __generate_auto_db()
-        
+
     __urls_from_url_dict()
-    
+
 if DEBUG:
     print urls

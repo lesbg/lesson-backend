@@ -22,7 +22,7 @@ from model.core import User
 
 class UserPage(ObjectPage):
     url = "/users/([^/]*)"
-    
+
     def get(self, username):
         # Check whether we have permission to access this user's information
         if not self.validator.has_permission('user_info', username):
@@ -31,7 +31,7 @@ class UserPage(ObjectPage):
         userlist = []
         userlist.append({u'name': u'attributes', u'link': self.gen_link("users/%s/attributes" % (username,))})
         return {u'user': userlist}
-        
+
 class UserAttrPage(AttrPage):
     url = "/users/([^/]*)/attributes"
     table = User
@@ -40,7 +40,7 @@ class UserAttrPage(AttrPage):
         # Check whether we have permission to access this user's information
         if not self.validator.has_permission('user_info', username):
             return self.forbidden()
-        
+
         # Get current user attributes
         #user = self.db.session.query(User).filter_by(Username=username).first()
         return self._get(username)

@@ -38,18 +38,18 @@ def get_file_config():
         print u"ERROR: Unable to read configuration file at %s" % (config_path,)
         sys.exit(1)
     return config
-            
+
 def create_file_config(path):
     """
     Create configuration file at path
     """
     config = ConfigParser.RawConfigParser()
     config.add_section('Main')
-    
+
     config.set('Main', 'database',
                u'mysql+mysqldb://test.example.com/lesson?charset=utf8')
     config.set('Main', 'script dir', u'scripts')
-    
+
     if not os.path.exists(os.path.dirname(path)):
         try:
             os.makedirs(os.path.dirname(path), 0700)
@@ -73,16 +73,16 @@ def get_config(session, uuid, key, fallback=True):
     """
     if isinstance(key, str):
         raise ValueError("Key '%s' is not unicode" % (key,))
-    
+
     item = session.query(DBConfig).filter_by(UUID=uuid, Key=key).first()
-    
-    if item is not None:   
+
+    if item is not None:
         return item.Value
     elif fallback:
         return get_config(session, core_uuid, key, False)
     else:
         return None
-    
+
 def set_config(session, uuid, key, value):
     """
     Sets configuration value for combination uuid, key, value.  If value
@@ -90,12 +90,12 @@ def set_config(session, uuid, key, value):
     """
     if isinstance(key, str):
         raise ValueError("Key '%s' is not unicode" % (key,))
-        
+
     key = unicode(key)
     value = unicode(value)
-    
+
     item = session.query(DBConfig).filter_by(UUID=uuid, Key=key).first()
-    
+
     if item is not None:
         item.Value = value
     else:

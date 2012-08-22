@@ -16,6 +16,7 @@
 # Copyright (C) 2012 Jonathan Dieter <jdieter@lesbg.com>
 
 import sys, os
+
 abspath = os.path.dirname(__file__)
 if abspath not in sys.path:
     sys.path.append(abspath)

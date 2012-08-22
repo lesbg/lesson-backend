@@ -18,7 +18,7 @@
 class Permission:
     def __init__(self, user):
         self.user = user
-        
+
     # Currently, most of this is hard-coded.  I hope to change this to a proper
     # permissions-based table in LESSON
     def has_permission(self, permission, to_check=None):
@@ -29,13 +29,13 @@ class Permission:
         #     elif user matches some_other_condition:
         #         return True
         #     return False
-        
+
         # Admin only permissions
         if permission in ["list_users", "show_log", "show_year", "show_departments", "show_attributes"]:
             if self.user.Permissions == 1:
                 return True
             return False
-        
+
         if permission == "user_info":
             if self.user.Permissions == 1:
                 return True

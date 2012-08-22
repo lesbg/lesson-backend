@@ -19,12 +19,12 @@ try:
     import simplejson as json
 except ImportError:
     import json
-    
+
 from urlparse import urlparse
 
 import xmlrpclib
 import datetime
-    
+
 def is_listish(obj):
     return ((hasattr(obj, "__getitem__") and
                not hasattr(obj, "strip")) or
@@ -65,7 +65,7 @@ def get_item(line, item_sep, quote_str, create_links):
         retval += unicode(item) + item_sep[1]
     retval = retval[:-len(item_sep[1])] + item_sep[2]
     return retval
-    
+
 def tablize(obj, body_start=u"", body_end=u"", row_sep=(u"", u"\n"),
             header_sep=(u"", u",", u""), item_sep=(u"", u",", u""),
             quote_str=u"", create_links=False):
@@ -100,8 +100,8 @@ def tablize(obj, body_start=u"", body_end=u"", row_sep=(u"", u"\n"),
 class RenderCom:
     def __init__(self):
         self.headers = True
-        
-    
+
+
     def __xml_fix_date(self, obj):
         if hasattr(obj, "keys"):
             objlist = obj.keys()
@@ -122,30 +122,30 @@ class RenderCom:
                 print key, item
                 if not isinstance(item, datetime.datetime) and isinstance(item, datetime.date):
                     obj[key] = datetime.datetime(item.year, item.month, item.day)
-            
+
     def json_handler(self, obj):
         if hasattr(obj, 'isoformat'):
             return obj.isoformat()
         else:
             raise TypeError, 'Object of type %s with value of %s is not JSON serializable' % (type(obj), repr(obj))
-        
+
     def render_xml(self, **args):
         self.__xml_fix_date(args)
         return xmlrpclib.dumps((args,), methodresponse=True, allow_none=True)
-    
+
     def render_json(self, **args):
         return json.dumps(args, default=self.json_handler, sort_keys=True)
-    
+
     def render_html(self, **args):
         return tablize(args, u"<html><body><table>", u"</table></body></html>",
                        ("<tr>", "</tr>\n"), ("<th>", "</th><th>", "</th>"),
                                             ("<td>", "</td><td>", "</td>"),
                         create_links=True)
-    
+
     def render_txt(self, **args):
         return tablize(args, u"", u"", ("", "\n"), ("", "\t", ""),
                                                     ("", "\t", ""))
-    
+
     def render_csv(self, **args):
         return tablize(args, u"", u"", ("", "\n"), ("", ",", ""),
                                                     ("", ",", ""), "\"")

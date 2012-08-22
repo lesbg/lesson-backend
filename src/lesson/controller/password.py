@@ -23,7 +23,7 @@ def encrypt(password):
     return ldap_context.encrypt(password)
 
 def validate(password, pwhash):
-    
+
     # Check for old-style MD5 passwords which won't have any associated type
     if pwhash[0] != "{":
         if hashlib.md5(password).hexdigest() == pwhash:

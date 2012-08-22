@@ -44,13 +44,13 @@ class VersionCheck(object):
     version = None
     auto_update = True
     extension = 'sh'
-    
+
     def __init__(self, db, script_dir=None):
         if self.__class__.__name__ == "VersionCheck":
             raise ValueError("'VersionCheck' is a virtual class and should not be instantiated directly")
         self.db = db
         self.script_dir = script_dir
-    
+
     def check_file(self, ufile):
         """
         Check whether update file exists.  Return True if file exists, False
@@ -59,7 +59,7 @@ class VersionCheck(object):
         if os.path.exists(ufile):
             return True
         return False
-    
+
     def run_file(self, ufile):
         """
         Run an update file and return True if update was successful, False if
@@ -70,21 +70,21 @@ class VersionCheck(object):
             return (True, None)
         except:
             return (False, u"Error running %s" % (ufile,))
-    
+
     def __check_file(self, start_ver, stop_ver):
         ufile = os.path.join("%s" % (self.script_dir,),
                              "%s-update-%i-%i.%s" % (self.uuid, start_ver, stop_ver, self.extension))
-        
+
         # Check whether update exists for start_ver -> stop_ver
         if self.check_file(ufile):
             return [ufile]
-        
+
         # Version jump is > 1, so split version jump in half and recursively
         # check for updates for each half 
         elif start_ver + 1 < stop_ver:
             filelist = []
             middle = ((stop_ver - start_ver) / 2) + start_ver
-            
+
             for item in self.__check_file(start_ver, middle):
                 if item is None:
                     return [None]
@@ -94,11 +94,11 @@ class VersionCheck(object):
                     return [None]
                 filelist.append(item)
             return filelist
-        
+
         # No updates for this start_ver -> stop_ver, so return [None]
         else:
             return [None]
-    
+
     def check_version(self):
         """
         Returns a tuple of (boolean, string|None) where the boolean is
@@ -126,17 +126,17 @@ class VersionCheck(object):
                 if not retval:
                     return (False, error)
         return (True, None)
-    
+
 class PyVersionCheck(VersionCheck):
     extension = 'py'
-    
+
     def __init__(self, db, script_dir):
         if self.__class__.__name__ == "PyVersionCheck":
             raise ValueError("'PyVersionCheck' is a virtual class and should not be instantiated directly")
         super(PyVersionCheck, self).__init__(db, script_dir)
-    
+
     def run_file(self, ufile):
-        
+
         import imp
         uname = os.path.basename(ufile)
         if ufile.endswith('.py'):
@@ -158,4 +158,3 @@ class PyVersionCheck(VersionCheck):
             return (False, u"Error loading update module %s" % (ufile,))
         finally:
             f.close()
-        

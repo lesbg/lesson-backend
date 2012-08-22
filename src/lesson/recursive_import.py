@@ -22,7 +22,7 @@ def get_import_path(module_path):
         return module_path
     else:
         return get_import_path(os.path.dirname(module_path))
-    
+
 def get_import_module(module_name):
     import_path = get_import_path(module_name)
     module_name = module_name.replace(import_path, "")
@@ -36,7 +36,7 @@ def recursive_import(module_location):
         name, ext = os.path.splitext(filename)
         module_file = os.path.join(module_dir, filename, "__init__.py")
         if os.path.exists(module_file):
-            module_name = get_import_module(os.path.join(module_dir, filename))    
+            module_name = get_import_module(os.path.join(module_dir, filename))
             __import__(module_name)
             recursive_import(module_file)
         elif ext == ".py" and name != "__init__":

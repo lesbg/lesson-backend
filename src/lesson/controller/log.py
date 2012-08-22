@@ -19,19 +19,20 @@
 
 from model.core import Log as DBLog, LogIgnoreHost, User
 
-NONE  = 0
+NONE = 0
 ERROR = 1
-INFO  = 3
+INFO = 3
 DEBUG = 10
+
 class Log:
     """
     There should be one instance of this class used in the LESSON backend.
     This class is used for logging backend page access.
     """
-    
+
     def __init__(self, db):
         self.db = db
-        
+
     def log(self, ctx, page, user, level, comment, record_level=INFO):
         if isinstance(user, unicode):
             username = user
@@ -39,22 +40,22 @@ class Log:
             username = user.Username
         else:
             raise TypeError("'user' must either be unicode string or model.core.User")
-        
+
         if level < 1:
             raise ValueError("Log level can't be log.NONE or negative")
 
         session = self.db.create_session()
-                
+
         if not 'REMOTE_HOST' in  ctx.environ.keys():
             remote_host = ctx.environ['REMOTE_ADDR'];
         else:
             remote_host = ctx.environ['REMOTE_HOST'];
-            
+
         # Always return 'localhost' for 127.0.0.1 and ::1
         if ctx.environ['REMOTE_ADDR'] in ("127.0.0.1", "::1"):
             remote_host = 'localhost'
-        
-        if 'HTTP_X_FORWARDED_FOR' in ctx.environ.keys():    
+
+        if 'HTTP_X_FORWARDED_FOR' in ctx.environ.keys():
             query = session.query(LogIgnoreHost)
             for item in query:
                 if item.HostAddr == remote_host:
@@ -63,12 +64,11 @@ class Log:
                 remote_host = ctx.environ['HTTP_X_FORWARDED_FOR']
             else:
                 remote_host = '%s via %s' % (remote_host, ctx.environ['HTTP_X_FORWARDED_FOR'])
-        
-        
+
+
         if level <= record_level:
             new_log = DBLog(page, user, level, remote_host, comment)
             session.add(new_log)
             session.commit()
             session.close()
         print page, username, level, remote_host, comment
-        
