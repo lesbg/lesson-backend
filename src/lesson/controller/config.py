@@ -17,7 +17,9 @@
 
 import ConfigParser, os, sys
 
-def get_config():
+from model.core import Config as DBConfig, uuid as core_uuid
+
+def get_file_config():
     """
     Get LESSON configuration, creating it if it doesn't already exist
     """
@@ -27,7 +29,7 @@ def get_config():
             config_path = path
             break
     if config_path is None:
-        create_config('config/lesson.conf')
+        create_file_config('config/lesson.conf')
         config_path = 'config/lesson.conf'
     config = ConfigParser.SafeConfigParser()
     try:
@@ -37,15 +39,17 @@ def get_config():
         sys.exit(1)
     return config
             
-def create_config(path):
+def create_file_config(path):
     """
     Create configuration file at path
     """
     config = ConfigParser.RawConfigParser()
     config.add_section('Main')
+    
     config.set('Main', 'database',
                u'mysql+mysqldb://test.example.com/lesson?charset=utf8')
     config.set('Main', 'script dir', u'scripts')
+    
     if not os.path.exists(os.path.dirname(path)):
         try:
             os.makedirs(os.path.dirname(path), 0700)
@@ -59,4 +63,42 @@ def create_config(path):
         sys.exit(1)
     config.write(configfile)
     configfile.close()
+
+def get_config(session, uuid, key, fallback=True):
+    """
+    Return configuration value for pair uuid, key.  If pair uuid, key doesn't
+    exist, fall back to core uuid, key.  If that doesn't exist, return None.
+    
+    This will *always* return a unicode string.
+    """
+    if isinstance(key, str):
+        raise ValueError("Key '%s' is not unicode" % (key,))
+    
+    item = session.query(DBConfig).filter_by(UUID=uuid, Key=key).first()
+    
+    if item is not None:   
+        return item.Value
+    elif fallback:
+        return get_config(session, core_uuid, key, False)
+    else:
+        return None
+    
+def set_config(session, uuid, key, value):
+    """
+    Sets configuration value for combination uuid, key, value.  If value
+    already exists, overwrite, otherwise create new value
+    """
+    if isinstance(key, str):
+        raise ValueError("Key '%s' is not unicode" % (key,))
         
+    key = unicode(key)
+    value = unicode(value)
+    
+    item = session.query(DBConfig).filter_by(UUID=uuid, Key=key).first()
+    
+    if item is not None:
+        item.Value = value
+    else:
+        item = DBConfig(UUID=uuid, Key=key, Value=value)
+        session.add(item)
+    session.commit()

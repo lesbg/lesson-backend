@@ -32,7 +32,7 @@ class Log:
     def __init__(self, db):
         self.db = db
         
-    def log(self, ctx, page, username, level, comment):
+    def log(self, ctx, page, username, level, comment, record_level=INFO):
         if level < 1:
             raise ValueError("Log level can't be log.NONE or negative")
 
@@ -57,10 +57,11 @@ class Log:
             else:
                 remote_host = '%s via %s' % (remote_host, ctx.environ['HTTP_X_FORWARDED_FOR'])
         
-        new_log = DBLog(page, username, level, remote_host, comment)
-        session.add(new_log)
+        
+        if level <= record_level:
+            new_log = DBLog(page, username, level, remote_host, comment)
+            session.add(new_log)
+            session.commit()
+            session.close()
         print page, username, level, remote_host, comment
-        session.commit()
-        session.close()
-        pass
         

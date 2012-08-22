@@ -55,7 +55,7 @@ class _GlobalData:
         # self.session = None
         # self.store = None
         self.rendercom = None
-        self.config = config.get_config()
+        self.config = config.get_file_config()
         self.engine = unicode(self.config.get('Main', 'database'))
         self.script_dir = self.config.get('Main', 'script dir')
         self.db = model.Session(self.engine, pool_recycle=3600)
@@ -158,6 +158,7 @@ class Page:
     error = None
     error_level = None
     log_error = True
+    log_level = log.INFO
     status = None
     session = None
     uuid = None
@@ -166,13 +167,31 @@ class Page:
         self.db  = _global_data.db
         self._log = _global_data.log
     
-    def log(self, comment, level = None, username = None):
-        if username is None:
-            username = self.user.Username
+    def log(self, comment, level = None):
+        username = self.user.Username
         if level is None:
-            level = log.DEBUG
-        self._log.log(web.ctx, web.ctx.fullpath.replace("/" + self.prefix + "/", ""), username, level, comment)
-        
+            if hasattr(self, "log_level") and self.log_level is not None:
+                level = self.log_level
+            else:
+                level = log.DEBUG
+        record_level = log.INFO
+        if hasattr(self, 'record_log_level') and self.record_log_level is not None:
+            record_level = self.record_log_level
+        self._log.log(web.ctx, web.ctx.fullpath.replace("/" + self.prefix + "/", ""), username, level, comment, record_level)
+    
+    def get_config(self, key, fallback=True):
+        """
+        Return config value of 'key'.  If config value doesn't exist, return
+        None.
+        """
+        return config.get_config(self.session, self.uuid, key, fallback)
+
+    def set_config(self, key, value):
+        """
+        Set config 'key' to 'value'.
+        """
+        return config.set_config(self.session, self.uuid, key, value)
+    
     @mimerender(
         default = 'html',
         override_input_key = 'format',
@@ -436,6 +455,11 @@ class Page:
         # Open database session
         self.session = self.db.create_session()
         
+        # Get DEBUG level
+        self.record_log_level = self.get_config(u'log_level')
+        if self.record_log_level is not None:
+            self.record_log_level = int(self.record_log_level)
+        
         (args, kwargs) = self._strip_prefix(args, kwargs)
         
         # Check permissions
@@ -518,6 +542,11 @@ class ListPage(Page):
     query = Page.query
     errno = Page.errno
     error = Page.error
+    log_error = Page.log_error
+    log_level = Page.log_level
+    status = Page.status
+    session = Page.session
+    uuid = Page.uuid
             
     def get_list(self):
         if self.table is None:
@@ -576,6 +605,11 @@ class ObjectPage(Page):
     query = Page.query
     errno = Page.errno
     error = Page.error
+    log_error = Page.log_error
+    log_level = Page.log_level
+    status = Page.status
+    session = Page.session
+    uuid = Page.uuid
     
     def get_links(self, index):
         if self.table is None:
@@ -633,6 +667,11 @@ class AttrPage(Page):
     query = Page.query
     errno = Page.errno
     error = Page.error
+    log_error = Page.log_error
+    log_level = Page.log_level
+    status = Page.status
+    session = Page.session
+    uuid = Page.uuid
     
     def get_attributes(self, index):
         if self.table is None:
