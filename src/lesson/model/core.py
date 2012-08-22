@@ -38,8 +38,8 @@ class Config(Base, TableTop):
     __tablename__ = 'config'
     
     ConfigIndex = Column(Integer, nullable=False, primary_key=True)
-    UUID        = Column(Unicode(36), nullable=False)
-    Key         = Column(Unicode(50), nullable=False)
+    UUID        = Column(Unicode(36), nullable=False, index=True)
+    Key         = Column(Unicode(50), nullable=False, index=True)
     Value       = Column(Unicode(1024), default=None)
     
     Link        = "config"
