@@ -37,8 +37,8 @@ class Config(Base):
     __tablename__ = u'config'
     
     ConfigIndex = Column(Integer, nullable=False, primary_key=True)
-    UUID        = Column(Unicode(36), nullable=False)
-    Key         = Column(Unicode(50), nullable=False)
+    UUID        = Column(Unicode(36), nullable=False, index=True)
+    Key         = Column(Unicode(50), nullable=False, index=True)
     Value       = Column(Unicode(1024), default=None)
     
 def upgrade(db):
@@ -50,7 +50,6 @@ def upgrade(db):
     
     version_upgrade(db) # Must be at end of upgrade script, and only run after
                         # upgrade is successful 
-
     
 def downgrade(db):
     precheck_downgrade(db) # Must be at beginning of downgrade script 
