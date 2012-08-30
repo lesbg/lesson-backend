@@ -28,7 +28,9 @@ from sqlalchemy.orm import relationship, backref
 from sqlalchemy import Column, Integer, Unicode, Date, String, DateTime, UnicodeText, Float, LargeBinary
 from sqlalchemy.ext.declarative import declarative_base
 
-from datetime import datetime
+from datetime import datetime, date
+
+from controller import password
 
 from model import TableTop
 
@@ -48,6 +50,12 @@ class Config(Base, TableTop):
         return u"<Config('%s: %s')>" % (self.Key, self.Value)
 
     def __init__(self, UUID, Key, Value):
+        super(Config, self).__init__()
+        type_check = {("UUID", unicode, False),
+                      ("Key", unicode, False),
+                      ("Value", unicode)}
+        self.check_type(locals(), type_check)
+
         self.UUID = UUID
         self.Key = Key
         self.Value = Value
@@ -62,17 +70,23 @@ class Version(Base, TableTop):
 
     UUID = Column(Unicode(36), nullable=False, primary_key=True)
     Type = Column(Unicode(50), nullable=False)
-    Version = Column(Integer, nullable=False)
+    VersionNumber = Column(Integer, nullable=False)
 
     Link = "versions"
 
     def __repr__(self):
         return u"<Version('%s - %i')>" % (self.Type, self.Version)
 
-    def __init__(self, UUID, Type, Version):
+    def __init__(self, UUID, Type, VersionNumber):
+        super(Version, self).__init__()
+        type_check = {("UUID", unicode, False),
+                      ("Key", unicode, False),
+                      ("VersionNumber", int, False)}
+        self.check_type(locals(), type_check)
+
         self.UUID = UUID
         self.Type = Type
-        self.Version = Version
+        self.VersionNumber = VersionNumber
 
 
 class Year(Base, TableTop):
@@ -90,9 +104,14 @@ class Year(Base, TableTop):
     Link = "years"
 
     def __repr__(self):
-        return u"<Year('%s')>" % (self.Year)
+        return u"<Year('%s')>" % (self.YearName)
 
     def __init__(self, YearName, YearNumber):
+        super(Year, self).__init__()
+        type_check = {("YearName", unicode, False),
+                      ("YearNumber", int, False)}
+        self.check_type(locals(), type_check)
+
         self.YearName = YearName
         self.YearNumber = YearNumber
 
@@ -114,6 +133,10 @@ class Department(Base, TableTop):
         return u"<Department('%s')>" % (self.DepartmentName)
 
     def __init__(self, DepartmentName):
+        super(Department, self).__init__()
+        type_check = {("DepartmentName", unicode, False)}
+        self.check_type(locals(), type_check)
+
         self.DepartmentName = DepartmentName
 
 
@@ -137,13 +160,25 @@ class SubjectType(Base, TableTop):
     def __repr__(self):
         return u"<SubjectType('%s')>" % (self.Title)
 
-    def __init__(self, Title, ShortTitle=None, ID=None, Description=None, Weight=None, HighPriority=None):
+    def __init__(self, Title, ShortTitle=None, ID=None, Description=None, Weight=None, HighPriority=False):
+        super(SubjectType, self).__init__()
+        type_check = {("Title", unicode, False),
+                      ("ShortTitle", unicode),
+                      ("ID", unicode),
+                      ("Description", unicode),
+                      ("Weight", int),
+                      ("HighPriority", bool, False)}
+        self.check_type(locals(), type_check)
+
         self.Title = Title
         self.ShortTitle = ShortTitle
         self.ID = ID
         self.Description = Description
         self.Weight = Weight
-        self.HighPriority = HighPriority
+        if HighPriority:
+            self.HighPriority = 1
+        else:
+            self.HighPriority = 0
 
 
 class Grade(Base, TableTop):
@@ -158,15 +193,21 @@ class Grade(Base, TableTop):
     DepartmentIndex = Column(Integer(11), ForeignKey('department.DepartmentIndex'), nullable=False)
     GradeName = Column(Unicode(50), nullable=False)
 
-    Department = relationship(Department, primaryjoin=DepartmentIndex == Department.DepartmentIndex, foreign_keys=[Department.DepartmentIndex], uselist=False)
+    DepartmentObject = relationship(Department, primaryjoin=DepartmentIndex == Department.DepartmentIndex, foreign_keys=[Department.DepartmentIndex], uselist=False)
 
     def __repr__(self):
         return u"<Grade('%s')>" % (self.GradeName)
 
-    def __init__(self, GradeIndex, Department, Description):
+    def __init__(self, GradeIndex, DepartmentObject, GradeName):
+        super(Grade, self).__init__()
+        type_check = {("GradeIndex", int, False),
+                      ("DepartmentObject", Department, False),
+                      ("GradeName", unicode, False)}
+        self.check_type(locals(), type_check)
+
         self.GradeIndex = GradeIndex
-        self.DepartmentIndex = Department.DepartmentIndex
-        self.Grade = Description
+        self.DepartmentIndex = DepartmentObject.DepartmentIndex
+        self.GradeName = GradeName
 
 
 class Term(Base, TableTop):
@@ -183,15 +224,22 @@ class Term(Base, TableTop):
     DepartmentIndex = Column(Integer(11), ForeignKey('department.DepartmentIndex'), nullable=False)
     HasConduct = Column(Integer(1), nullable=False, default=1)
 
-    Department = relationship(Department, primaryjoin=DepartmentIndex == Department.DepartmentIndex, foreign_keys=[Department.DepartmentIndex], uselist=False)
+    DepartmentObject = relationship(Department, primaryjoin=DepartmentIndex == Department.DepartmentIndex, foreign_keys=[Department.DepartmentIndex], uselist=False)
 
     def __repr__(self):
         return u"<Term('%s')>" % (self.TermName)
 
-    def __init__(self, TermName, TermNumber, Department, HasConduct=True):
+    def __init__(self, TermName, TermNumber, DepartmentObject, HasConduct=True):
+        super(Term, self).__init__()
+        type_check = {("TermName", unicode, False),
+                      ("TermNumber", int, False),
+                      ("DepartmentObject", Department, False),
+                      ("HasConduct", bool, False)}
+        self.check_type(locals(), type_check)
+
         self.TermName = TermName
         self.TermNumber = TermNumber
-        self.DepartmentIndex = Department.DepartmentIndex
+        self.DepartmentIndex = DepartmentObject.DepartmentIndex
         if HasConduct:
             self.HasConduct = 1
         else:
@@ -206,25 +254,34 @@ class NonmarkType(Base, TableTop):
     __tablename__ = 'nonmark_type'
 
     NonmarkTypeIndex = Column(Integer, nullable=False, primary_key=True)
-    NonmarkType = Column(Unicode(50), nullable=False)
+    NonmarkTypeName = Column('NonmarkType', Unicode(50), nullable=False)
     DepartmentIndex = Column(Integer, ForeignKey('department.DepartmentIndex'))
 
-    Department = relationship(Department, primaryjoin=DepartmentIndex == Department.DepartmentIndex, foreign_keys=[Department.DepartmentIndex], uselist=False)
+    DepartmentObject = relationship(Department, primaryjoin=DepartmentIndex == Department.DepartmentIndex, foreign_keys=[Department.DepartmentIndex], uselist=False)
 
     Link = 'nonmark_types'
 
     def __repr__(self):
-        return u"<NonmarkType('%s')>" % (self.NonmarkType)
+        return u"<NonmarkType('%s')>" % (self.NonmarkTypeName)
 
-    def __init__(self, NonmarkType, Department):
+    def __init__(self, NonmarkTypeName, DepartmentObject):
+        super(NonmarkType, self).__init__()
+        type_check = {("NonmarkTypeName", unicode, False),
+                      ("DepartmentOjbect", Department)}
+        self.check_type(locals(), type_check)
+
         self.NonmarkType = NonmarkType
-        self.DepartmentIndex = Department.DepartmentIndex
+        if DepartmentObject is not None:
+            self.DepartmentIndex = DepartmentObject.DepartmentIndex
+        else:
+            self.DepartmentIndex = None
 
 
-class NonmarkIndex(Base, TableTop):
+class Nonmark(Base, TableTop):
     """
-    This class contains an auto-incrementing primary key, a mandatory
-    description, and an optional applicable department
+    This class contains an auto-incrementing primary key, the applicable
+    NonmarkTypeIndex, an optional input value for the nonmark, the display
+    value, an optional minimum score for the nonmark and an optional value
     """
 
     __tablename__ = 'nonmark_index'
@@ -236,15 +293,23 @@ class NonmarkIndex(Base, TableTop):
     MinScore = Column(Float)
     Value = Column(Float)
 
-    NonmarkType = relationship(NonmarkType, primaryjoin=NonmarkTypeIndex == NonmarkType.NonmarkTypeIndex, foreign_keys=[NonmarkType.NonmarkTypeIndex], backref=backref('NonmarkIndexes', uselist=True), uselist=False)
+    NonmarkTypeObject = relationship(NonmarkType, primaryjoin=NonmarkTypeIndex == NonmarkType.NonmarkTypeIndex, foreign_keys=[NonmarkType.NonmarkTypeIndex], backref=backref('Nonmarks', uselist=True), uselist=False)
 
     Link = 'nonmark_indexes'
 
     def __repr__(self):
         return u"<NonmarkIndex('%s: %s')>" % (self.NonmarkType.NonmarkType, self.Display)
 
-    def __init__(self, NonmarkType, Display, Input=None, MinScore=None, Value=None):
-        self.NonmarkTypeIndex = NonmarkType.NonmarkTypeIndex
+    def __init__(self, NonmarkTypeObject, Display, Input=None, MinScore=None, Value=None):
+        super(Nonmark, self).__init__()
+        type_check = {("NonmarkTypeObject", NonmarkType, False),
+                      ("Display", unicode, False),
+                      ("Input", unicode),
+                      ("MinScore", (int, long)),
+                      ("Value", (int, long))}
+        self.check_type(locals(), type_check)
+
+        self.NonmarkTypeIndex = NonmarkTypeObject.NonmarkTypeIndex
         self.Display = Display
         self.Input = Input
         self.MinScore = MinScore
@@ -284,17 +349,119 @@ class User(Base, TableTop):
     User4 = Column(Integer) #boolean
     User5 = Column(Integer) #boolean
 
-    Department = relationship(Department, primaryjoin=DepartmentIndex == Department.DepartmentIndex, foreign_keys=[Department.DepartmentIndex], backref=backref('Users', uselist=True), uselist=False)
+    DepartmentObject = relationship(Department, primaryjoin=DepartmentIndex == Department.DepartmentIndex, foreign_keys=[Department.DepartmentIndex], backref=backref('Users', uselist=True), uselist=False)
 
     Link = "users"
 
-    def __init__(self, Username, FirstName, Surname):
+    def __repr__(self):
+        return u"<User('%s %s (%s)')>" % (self.FirstName, self.Surname, self.Username)
+
+    def __init__(self, Username, FirstName, Surname, Gender=None,
+                 PhoneNumber=None, CellNumber=None, DOB=None, Password=None,
+                 Password2=None, Permissions=0, Title=None, House=None,
+                 Email=None, DateType=None, DateSeparator=None,
+                 ActiveStudent=False, ActiveTeacher=False, SupportTeacher=False,
+                 DepartmentObject=None, User1=None, User2=None, User3=None,
+                 User4=None, User5=None):
+        super(User, self).__init__()
+        type_check = {("Username", unicode, False),
+                      ("FirstName", unicode, False),
+                      ("Surname", unicode, False),
+                      ("Gender", unicode),
+                      ("PhoneNumber", unicode),
+                      ("CellNumber", unicode),
+                      ("DOB", date),
+                      ("Password", unicode),
+                      ("Password2", unicode),
+                      ("Permissions", int, False),
+                      ("Title", unicode),
+                      ("House", unicode),
+                      ("Email", unicode),
+                      ("DateType", int),
+                      ("DateSeparator", unicode),
+                      ("ActiveStudent", bool, False),
+                      ("ActiveTeacher", bool, False),
+                      ("SupportTeacher", bool, False),
+                      ("DepartmentObject", Department),
+                      ("User1", bool),
+                      ("User2", bool),
+                      ("User3", bool),
+                      ("User4", bool),
+                      ("User5", bool)}
+        self.check_type(locals(), type_check)
+
         self.Username = Username
         self.FirstName = FirstName
         self.Surname = Surname
-
-    def __repr__(self):
-        return u"<User('%s %s (%s)')>" % (self.FirstName, self.Surname, self.Username)
+        self.Gender = Gender
+        self.PhoneNumber = PhoneNumber
+        self.CellNumber = CellNumber
+        self.DOB = DOB
+        if Password is not None:
+            self.Password = password.encrypt(Password)
+        else:
+            self.Password = None
+        if Password2 is not None:
+            self.Password2 = password.encrypt(Password2)
+        else:
+            self.Password2 = None
+        self.Permissions = Permissions
+        self.Title = Title
+        self.House = House
+        self.Email = Email
+        self.DateType = DateType
+        self.DateSeparator = DateSeparator
+        if ActiveStudent:
+            self.ActiveStudent = 1
+        else:
+            self.ActiveStudent = 0
+        if ActiveTeacher:
+            self.ActiveTeacher = 1
+        else:
+            self.ActiveTeacher = 0
+        if SupportTeacher:
+            self.SupportTeacher = 1
+        else:
+            self.SupportTeacher = 0
+        if DepartmentObject is not None:
+            self.DepartmentIndex = DepartmentObject.DepartmentIndex
+        else:
+            self.DepartmentIndex = None
+        if User1 is not None:
+            if User1:
+                self.User1 = 1
+            else:
+                self.User1 = 0
+        else:
+            self.User1 = None
+        if User2 is not None:
+            if User2:
+                self.User2 = 1
+            else:
+                self.User2 = 0
+        else:
+            self.User2 = None
+        if User3 is not None:
+            if User3:
+                self.User3 = 1
+            else:
+                self.User3 = 0
+        else:
+            self.User3 = None
+        if User4 is not None:
+            if User4:
+                self.User4 = 1
+            else:
+                self.User4 = 0
+        else:
+            self.User4 = None
+        if User5 is not None:
+            if User5:
+                self.User5 = 1
+            else:
+                self.User5 = 0
+        else:
+            self.User5 = None
 
 
 class Class(Base, TableTop):
@@ -314,23 +481,37 @@ class Class(Base, TableTop):
     DepartmentIndex = Column(Integer, ForeignKey('department.DepartmentIndex'), nullable=False)
     HasConduct = Column(Integer, nullable=False, default=1) #boolean
 
-    Grade = relationship(Grade, primaryjoin=GradeIndex == Grade.GradeIndex, foreign_keys=[Grade.GradeIndex], uselist=False)
-    Department = relationship(Department, primaryjoin=DepartmentIndex == Department.DepartmentIndex, foreign_keys=[Department.DepartmentIndex], uselist=False)
-    Year = relationship(Year, primaryjoin=YearIndex == Year.YearIndex, foreign_keys=[Year.YearIndex], uselist=False)
-    ClassTeacher = relationship(User, primaryjoin=ClassTeacherUsername == User.Username, foreign_keys=[User.Username], uselist=False)
+    GradeObject = relationship(Grade, primaryjoin=GradeIndex == Grade.GradeIndex, foreign_keys=[Grade.GradeIndex], uselist=False)
+    DepartmentObject = relationship(Department, primaryjoin=DepartmentIndex == Department.DepartmentIndex, foreign_keys=[Department.DepartmentIndex], uselist=False)
+    YearObject = relationship(Year, primaryjoin=YearIndex == Year.YearIndex, foreign_keys=[Year.YearIndex], uselist=False)
+    ClassTeacherObject = relationship(User, primaryjoin=ClassTeacherUsername == User.Username, foreign_keys=[User.Username], uselist=False)
 
     Link = "classes"
 
     def __repr__(self):
-        return u"<Class('%s - %s')>" % (self.Year.Year, self.Class)
+        return u"<Class('%s - %s')>" % (self.Year.YearName, self.ClassName)
 
-    def __init__(self, ClassName, Year, Department, Grade=None, ClassTeacher=None, HasConduct=True):
+    def __init__(self, ClassName, YearObject, DepartmentObject, GradeObject=None, ClassTeacherObject=None, HasConduct=True):
+        super(Class, self).__init__()
+        type_check = {("ClassName", unicode, False),
+                      ("YearObject", Year, False),
+                      ("DepartmentObject", Department, False),
+                      ("GradeObject", Grade),
+                      ("ClassTeacherObject", User),
+                      ("HasConduct", bool, False)}
+        self.check_type(locals(), type_check)
+
         self.ClassName = ClassName
-        self.YearIndex = Year.YearIndex
-        self.DepartmentIndex = Department.DepartmentIndex
-        self.GradeIndex = Grade.GradeIndex
-        if ClassTeacher != None:
-            self.ClassTeacherUsername = ClassTeacher.Username
+        self.YearIndex = YearObject.YearIndex
+        self.DepartmentIndex = DepartmentObject.DepartmentIndex
+        if GradeObject is not None:
+            self.GradeIndex = GradeObject.GradeIndex
+        else:
+            self.GradeIndex = None
+        if ClassTeacherObject is not None:
+            self.ClassTeacherUsername = ClassTeacherObject.Username
+        else:
+            self.ClassTeacherUsername = None
         if HasConduct:
             self.HasConduct = 1
         else:
@@ -366,21 +547,39 @@ class ClassTerm(Base, TableTop):
     ReportTemplate = Column(LargeBinary)
     ReportTemplateType = Column(Unicode(300))
 
-    Class = relationship(Class, primaryjoin=ClassIndex == Class.ClassIndex, foreign_keys=[Class.ClassIndex], uselist=False)
-    Term = relationship(Term, primaryjoin=TermIndex == Term.TermIndex, foreign_keys=[Term.TermIndex], uselist=False)
+    ClassObject = relationship(Class, primaryjoin=ClassIndex == Class.ClassIndex, foreign_keys=[Class.ClassIndex], uselist=False)
+    TermObject = relationship(Term, primaryjoin=TermIndex == Term.TermIndex, foreign_keys=[Term.TermIndex], uselist=False)
     AverageNM = relationship(NonmarkType, primaryjoin=AverageTypeIndex == NonmarkType.NonmarkTypeIndex, foreign_keys=[NonmarkType.NonmarkTypeIndex], uselist=False)
     ConductNM = relationship(NonmarkType, primaryjoin=AverageTypeIndex == NonmarkType.NonmarkTypeIndex, foreign_keys=[NonmarkType.NonmarkTypeIndex], uselist=False)
     EffortNM = relationship(NonmarkType, primaryjoin=AverageTypeIndex == NonmarkType.NonmarkTypeIndex, foreign_keys=[NonmarkType.NonmarkTypeIndex], uselist=False)
 
     def __repr__(self):
-        return u"<ClassTerm('%s - %s - %s')>" % (self.Term.TermName, self.Class.Year.YearName, self.Class.ClassName)
+        return u"<ClassTerm('%s - %s - %s')>" % (self.TermObject.TermName, self.ClassObject.YearObject.YearName, self.ClassObject.ClassName)
 
-    def __init__(self, Class, Term, AbsenceType=0, AverageType=0, ConductType=0, EffortType=0,
-                       CTCommentType=0, HODCommentType=0, PrincipalCommentType=0,
-                       AverageNM=None, ConductNM=None, EffortNM=None,
-                       ReportTemplate=None, ReportTemplateType=None):
-        self.ClassIndex = Class.ClassIndex
-        self.TermIndex = Term.TermIndex
+    def __init__(self, ClassObject, TermObject, AbsenceType=0, AverageType=0,
+                 ConductType=0, EffortType=0, CTCommentType=0,
+                 HODCommentType=0, PrincipalCommentType=0, AverageNM=None,
+                 ConductNM=None, EffortNM=None, ReportTemplate=None,
+                 ReportTemplateType=None):
+        super(ClassTerm, self).__init__()
+        type_check = {("ClassObject", Class, False),
+                      ("TermObject", Term, False),
+                      ("AbsenceType", int, False),
+                      ("AverageType", int, False),
+                      ("ConductType", int, False),
+                      ("EffortType", int, False),
+                      ("CTCommentType", int, False),
+                      ("HODCommentType", int, False),
+                      ("PrincipalCommentType", int, False),
+                      ("AverageNM", NonmarkType),
+                      ("ConductNM", NonmarkType),
+                      ("EffortNM", NonmarkType),
+                      ("ReportTemplate", str),
+                      ("ReportTemplateType", unicode)}
+        self.check_type(locals(), type_check)
+
+        self.ClassIndex = ClassObject.ClassIndex
+        self.TermIndex = TermObject.TermIndex
         self.AbsenceType = AbsenceType
         self.AverageType = AverageType
         self.ConductType = ConductType
@@ -392,11 +591,16 @@ class ClassTerm(Base, TableTop):
         self.ReportTemplateType = ReportTemplateType
         if AverageNM != None:
             self.AverageTypeIndex = AverageNM.NonmarkTypeIndex
+        else:
+            self.AverageTypeIndex = None
         if EffortNM != None:
             self.EffortTypeIndex = EffortNM.NonmarkTypeIndex
+        else:
+            self.EffortTypeIndex = None
         if ConductNM != None:
             self.ConductTypeIndex = ConductNM.NonmarkTypeIndex
-
+        else:
+            self.ConductTypeIndex = None
 
 class ClassList(Base, TableTop):
     """
@@ -429,17 +633,23 @@ class ClassList(Base, TableTop):
     ReportPrinted = Column(Integer, nullable=False, default=0) # boolean
     ClassOrder = Column(Integer)
 
-    HOD = relationship(User, primaryjoin=HODUsername == User.Username, foreign_keys=[User.Username], uselist=False)
-    Principal = relationship(User, primaryjoin=PrincipalUsername == User.Username, foreign_keys=[User.Username], uselist=False)
-    User = relationship(User, primaryjoin=Username == User.Username, foreign_keys=[User.Username], uselist=False)
-    ClassTerm = relationship(ClassTerm, primaryjoin=ClassTermIndex == ClassTerm.ClassTermIndex, foreign_keys=[ClassTerm.ClassTermIndex], uselist=False)
+    HODObject = relationship(User, primaryjoin=HODUsername == User.Username, foreign_keys=[User.Username], uselist=False)
+    PrincipalObject = relationship(User, primaryjoin=PrincipalUsername == User.Username, foreign_keys=[User.Username], uselist=False)
+    UserObject = relationship(User, primaryjoin=Username == User.Username, foreign_keys=[User.Username], uselist=False)
+    ClassTermObject = relationship(ClassTerm, primaryjoin=ClassTermIndex == ClassTerm.ClassTermIndex, foreign_keys=[ClassTerm.ClassTermIndex], uselist=False)
 
     def __repr__(self):
-        return u"<ClassList('%s: %s - %s - %s')>" % (self.User.Username, self.ClassTerm.Term.TermName, self.ClassTerm.Class.Year.YearName, self.ClassTerm.Class.ClassName)
+        return u"<ClassList('%s: %s - %s - %s')>" % (self.UserObject.Username, self.ClassTermObject.Term.TermName, self.ClassTermObject.ClassObject.YearObject.YearName, self.ClassTermObject.ClassObject.ClassName)
 
-    def __init__(self, ClassTerm, User, ClassOrder=None):
-        self.ClassTermIndex = ClassTerm.ClassTermIndex
-        self.Username = User.Username
+    def __init__(self, ClassTermObject, UserObject, ClassOrder=None):
+        super(ClassList, self).__init__()
+        type_check = {("ClassTermObject", ClassTerm, False),
+                      ("UserObject", User, False),
+                      ("ClassOrder", int)}
+        self.check_type(locals(), type_check)
+
+        self.ClassTermIndex = ClassTermObject.ClassTermIndex
+        self.Username = UserObject.Username
         self.ClassOrder = ClassOrder
 
 
@@ -459,17 +669,25 @@ class Casenote(Base, TableTop):
     Date = Column(DateTime, nullable=False)
     Level = Column(Integer, nullable=False, default=1)
 
-    Staff = relationship(User, primaryjoin=StaffUsername == User.Username, foreign_keys=[User.Username], uselist=False)
-    Student = relationship(User, primaryjoin=StudentUsername == User.Username, foreign_keys=[User.Username], uselist=False)
+    StaffObject = relationship(User, primaryjoin=StaffUsername == User.Username, foreign_keys=[User.Username], uselist=False)
+    StudentObject = relationship(User, primaryjoin=StudentUsername == User.Username, foreign_keys=[User.Username], uselist=False)
 
     Link = "casenotes"
 
     def __repr__(self):
         return u"<Casenote('%s -> %s (%s)')>" % (self.StaffUsername, self.StudentUsername, self.Date)
 
-    def __init__(self, Staff, Student, Level, Note, Date=datetime.now()):
-        self.StaffUsername = Staff.Username
-        self.StudentUsername = Student.Username
+    def __init__(self, StaffObject, StudentObject, Level, Note, Date=datetime.now()):
+        super(Casenote, self).__init__()
+        type_check = {("StaffObject", User, False),
+                      ("StudentObject", User, False),
+                      ("Level", int, False),
+                      ("Note", unicode),
+                      ("Date", datetime, False)}
+        self.check_type(locals(), type_check)
+
+        self.StaffUsername = StaffObject.Username
+        self.StudentUsername = StudentObject.Username
         self.Level = Level
         self.Note = Note
         self.Date = Date
@@ -486,20 +704,26 @@ class Log(Base, TableTop):
     Page = Column(UnicodeText, nullable=False)
     RemoteHost = Column(UnicodeText, nullable=False)
 
-    User = relationship(User, primaryjoin=Username == User.Username, foreign_keys=[User.Username], backref=backref('Logs', uselist=True), uselist=False)
+    UserObject = relationship(User, primaryjoin=Username == User.Username, foreign_keys=[User.Username], backref=backref('Logs', uselist=True), uselist=False)
 
     Link = "logs"
 
     def __repr__(self):
         return u"<Log('%i - %s - %s')>" % (self.Level, self.Username, self.Comment)
 
-    def __init__(self, Page, User, Level, RemoteHost, Comment=None):
-        if isinstance(User, unicode):
-            username = User
-        elif isinstance(User, sys.modules[__name__].User):
-            username = User.Username
-        else:
-            raise TypeError("'User' must either be unicode string or model.core.User")
+    def __init__(self, Page, UserObject, Level, RemoteHost, Comment=None):
+        super(Log, self).__init__()
+        type_check = {("Page", unicode, False),
+                      ("UserObject", (User, unicode), False),
+                      ("Level", int, False),
+                      ("RemoteHost", unicode, False),
+                      ("Comment", unicode)}
+        self.check_type(locals(), type_check)
+
+        if isinstance(UserObject, unicode):
+            username = UserObject
+        else: # isinstance(UserObject, User):
+            username = UserObject.Username
 
         self.Username = username
         self.Level = Level
@@ -521,6 +745,40 @@ class LogIgnoreHost(Base, TableTop):
         return u"<LogIgnoreHost('%s')>" % (self.HostAddr)
 
     def __init__(self, HostAddr):
-        if HostAddr is None:
-            raise ValueError("Host address must be set")
+        super(LogIgnoreHost, self).__init__()
+        type_check = {("HostAddr", unicode, False)}
+        self.check_type(locals(), type_check)
+
         self.HostAddr = HostAddr
+
+# Any changes to the Permission table *must* also be changed in model/__init__.py
+class Permission(Base, TableTop):
+    __tablename__ = u'permission'
+
+    ConfigIndex = Column(Integer, nullable=False, primary_key=True)
+    UUID = Column(Unicode(36), nullable=False, index=True)
+    Type = Column(Unicode(50), nullable=False, index=True)
+    Username = Column(Unicode(50), nullable=False, index=True)
+
+    UserObject = relationship(User, primaryjoin=Username == User.Username, foreign_keys=[User.Username], backref=backref('Permissions', uselist=True), uselist=False)
+
+    Link = "permissions"
+
+    def __repr__(self):
+        return u"<Permission(%s - %s)>" % (self.Username, self.Type)
+
+    def __init__(self, UUID, Type, UserObject):
+        super(Permission, self).__init__()
+        type_check = {("UUID", unicode, False),
+                      ("UserObject", (User, unicode), False),
+                      ("Type", unicode, False)}
+        self.check_type(locals(), type_check)
+
+        if isinstance(UserObject, unicode):
+            username = UserObject
+        else: # isinstance(UserObject, User):
+            username = User.Username
+
+        self.UUID = UUID
+        self.Type = Type
+        self.Username = username
