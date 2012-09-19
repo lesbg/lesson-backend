@@ -22,19 +22,19 @@ class VersionCheck(object):
     """
     Version is a virtual class that will check whether the database version
     of a module matches the current version of the module
-    
+
     If the database version is less than the module version, Version will
     attempt to run any update files in <script_dir> in the form of
     (uuid)-update-(old version)-(new version) when auto_update is True
-    
+
     If the versions differ by more than one, the class will check for the
     existence of intermediate update files and run them if applicable
-    
+
     Child classes *must* specify uuid and module version (version).  Child
     classes may also specify update script directory (script_dir) for automatic
     database updates, as well as turning off automatic database updates by
     setting auto_update to False
-    
+
     You do not need to actually run the check, as the backend will do so
     automatically when it starts up.
     """
@@ -113,12 +113,12 @@ class VersionCheck(object):
         session = self.db.create_session()
         cur_ver = session.query(Version).get(self.uuid)
         session.close()
-        if cur_ver.Version > self.version:
+        if cur_ver.VersionNumber > self.version:
             return (False, u"The %s version in the database is %i, while our version is %i.  Please upgrade module %s" % (cur_ver.Type, cur_ver.Version, self.version, cur_ver.Type))
-        elif cur_ver.Version < self.version:
+        elif cur_ver.VersionNumber < self.version:
             script_files = [None]
             if self.script_dir is not None:
-                script_files = self.__check_file(cur_ver.Version, self.version)
+                script_files = self.__check_file(cur_ver.VersionNumber, self.version)
             if script_files == [None]:
                 return (False, u"The %s version in the database is %i, while our version is %i.  Please manually upgrade the database for %s" % (cur_ver.Type, cur_ver.Version, self.version, cur_ver.Type))
             for ufile in script_files:
@@ -151,7 +151,7 @@ class PyVersionCheck(VersionCheck):
             session = self.db.create_session()
             cur_ver = session.query(Version).get(self.uuid)
             session.close()
-            if cur_ver.Version != self.version:
+            if cur_ver.VersionNumber != self.version:
                 return (False, u"Module %s didn't upgrade version in database" % (ufile,))
             return (True, None)
         except:

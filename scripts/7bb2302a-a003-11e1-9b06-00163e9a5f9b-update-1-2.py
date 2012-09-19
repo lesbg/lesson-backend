@@ -41,6 +41,14 @@ class Config(Base):
     Key = Column(Unicode(50), nullable=False, index=True)
     Value = Column(Unicode(1024), default=None)
 
+class Permission(Base):
+    __tablename__ = u'permission'
+    
+    ConfigIndex = Column(Integer, nullable=False, primary_key=True)
+    UUID = Column(Unicode(36), nullable=False, index=True)
+    Type = Column(Unicode(50), nullable=False, index=True)
+    Username = Column(Unicode(50), nullable=False, index=True)
+
 def upgrade(db):
     precheck_upgrade(db) # Must be at beginning of upgrade script
 

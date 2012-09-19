@@ -760,7 +760,7 @@ class Permission(Base, TableTop):
     Type = Column(Unicode(50), nullable=False, index=True)
     Username = Column(Unicode(50), nullable=False, index=True)
 
-    UserObject = relationship(User, primaryjoin=Username == User.Username, foreign_keys=[User.Username], backref=backref('Permissions', uselist=True), uselist=False)
+    UserObject = relationship(User, primaryjoin=Username == User.Username, foreign_keys=[User.Username], backref=backref('PermissionList', uselist=True), uselist=False)
 
     Link = "permissions"
 
