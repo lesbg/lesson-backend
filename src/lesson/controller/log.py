@@ -65,6 +65,15 @@ class Log:
             else:
                 remote_host = '%s via %s' % (remote_host, ctx.environ['HTTP_X_FORWARDED_FOR'])
 
+        if isinstance(remote_host, str):
+            remote_host = unicode(remote_host)
+
+        if isinstance(page, str):
+            page = unicode(page)
+
+        if isinstance(comment, str):
+            comment = unicode(comment)
+
         if level <= record_level:
             new_log = DBLog(page, user, level, remote_host, comment)
             session.add(new_log)
