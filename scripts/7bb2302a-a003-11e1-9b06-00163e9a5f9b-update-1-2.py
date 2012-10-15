@@ -43,7 +43,7 @@ class Config(Base):
 
 class Permission(Base):
     __tablename__ = u'permission'
-    
+
     ConfigIndex = Column(Integer, nullable=False, primary_key=True)
     UUID = Column(Unicode(36), nullable=False, index=True)
     Type = Column(Unicode(50), nullable=False, index=True)
@@ -77,7 +77,7 @@ metadata = MetaData()
 version = Table(u'version', metadata,
                 Column(u'UUID', Unicode(36), nullable=False, primary_key=True),
                 Column(u'Type', Unicode(50), nullable=False),
-                Column(u'Version', Integer, nullable=False)
+                Column(u'VersionNumber', Integer, nullable=False)
                 )
 
 def precheck_upgrade(db):
@@ -100,21 +100,21 @@ def version_downgrade(db):
 
 def _check_old(db):
     result = db.engine.execute(select([version], version.c.UUID == uuid))
-    if result.fetchone()[u'Version'] != old_version:
+    if result.fetchone()[u'VersionNumber'] != old_version:
         return False
     return True
 
 def _check_new(db):
     result = db.engine.execute(select([version], version.c.UUID == uuid))
-    if result.fetchone()[u'Version'] != new_version:
+    if result.fetchone()[u'VersionNumber'] != new_version:
         return False
     return True
 
 def _upgrade_version(db):
-    db.engine.execute(version.update().where(version.c.UUID == uuid).values(Version=new_version))
+    db.engine.execute(version.update().where(version.c.UUID == uuid).values(VersionNumber=new_version))
 
 def _downgrade_version(db):
-    db.engine.execute(version.update().where(version.c.UUID == uuid).values(Version=old_version))
+    db.engine.execute(version.update().where(version.c.UUID == uuid).values(VersionNumber=old_version))
 
 if __name__ == "__main__":
     from sqlalchemy import create_engine
@@ -131,5 +131,5 @@ if __name__ == "__main__":
     upgrade(db)
     downgrade(db)
     result = db.engine.execute(select([version], version.c.UUID == uuid))
-    if result.fetchone()[u'Version'] != old_version:
+    if result.fetchone()[u'VersionNumber'] != old_version:
         raise ValueError(u"After upgrade/downgrade process, database has been changed")

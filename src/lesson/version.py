@@ -17,6 +17,7 @@
 
 from model.core import Version
 import subprocess, os.path
+import sys, traceback
 
 class VersionCheck(object):
     """
@@ -155,6 +156,8 @@ class PyVersionCheck(VersionCheck):
                 return (False, u"Module %s didn't upgrade version in database" % (ufile,))
             return (True, None)
         except:
+            for item in traceback.format_exception(*sys.exc_info()):
+                print item
             return (False, u"Error loading update module %s" % (ufile,))
         finally:
             f.close()
