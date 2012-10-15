@@ -18,7 +18,7 @@
 # Copyright (C) 2012 Jonathan Dieter <jdieter@lesbg.com>
 
 uuid = u'7bb2302a-a003-11e1-9b06-00163e9a5f9b'
-version = 2
+version = 3
 
 import sys
 
@@ -601,6 +601,30 @@ class ClassTerm(Base, TableTop):
             self.ConductTypeIndex = ConductNM.NonmarkTypeIndex
         else:
             self.ConductTypeIndex = None
+
+class SupportClass(Base, TableTop):
+    __tablename__ = u'support_class'
+
+    SupportClassIndex = Column(Integer, nullable=False, primary_key=True)
+    Username = Column(Unicode(50), ForeignKey('user.Username'), nullable=False)
+    ClassTermIndex = Column(Integer, ForeignKey('classterm.ClassTermIndex'), nullable=False)
+
+    UserObject = relationship(User, primaryjoin=Username == User.Username, foreign_keys=[User.Username], uselist=False)
+    ClassTermObject = relationship(ClassTerm, primaryjoin=ClassTermIndex == ClassTerm.ClassTermIndex, foreign_keys=[ClassTerm.ClassTermIndex], uselist=False)
+
+    Link = 'support_class'
+
+    def __repr__(self):
+        return u"<SupportClass('%s: %s - %s - %s')>" % (self.UserObject.Username, self.ClassTermObject.Term.TermName, self.ClassTermObject.ClassObject.YearObject.YearName, self.ClassTermObject.ClassObject.ClassName)
+
+    def __init__(self, ClassTermObject, UserObject):
+        super(ClassList, self).__init__()
+        type_check = {("ClassTermObject", ClassTerm, False),
+                      ("UserObject", User, False)}
+        self.check_type(locals(), type_check)
+
+        self.ClassTermIndex = ClassTermObject.ClassTermIndex
+        self.Username = UserObject.Username
 
 class ClassList(Base, TableTop):
     """
