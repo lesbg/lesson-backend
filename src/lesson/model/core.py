@@ -1,26 +1,24 @@
 # lesson/model/core.py
-#
+# 
 # Core database configuration
-#
+# 
 # This file is part of LESSON.  LESSON is free software: you can
 # redistribute it and/or modify it under the terms of the GNU General Public
 # License as published by the Free Software Foundation, version 2 or later.
-#
+# 
 # This program is distributed in the hope that it will be useful, but WITHOUT
 # ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
 # FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
 # details.
-#
+# 
 # You should have received a copy of the GNU General Public License along with
 # this program; if not, write to the Free Software Foundation, Inc., 51
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-#
+# 
 # Copyright (C) 2012 Jonathan Dieter <jdieter@lesbg.com>
 
 uuid = u'7bb2302a-a003-11e1-9b06-00163e9a5f9b'
-version = 3
-
-import sys
+version = 4
 
 from sqlalchemy import ForeignKey
 from sqlalchemy.orm import relationship, backref
@@ -153,7 +151,7 @@ class SubjectType(Base, TableTop):
     ID = Column(Unicode(50))
     Description = Column(UnicodeText)
     Weight = Column(Integer)
-    HighPriority = Column(Integer, nullable=False, default=0) # boolean
+    HighPriority = Column(Integer, nullable=False, default=0)  # boolean
 
     Link = "SubjectTypes"
 
@@ -189,7 +187,7 @@ class Grade(Base, TableTop):
 
     __tablename__ = 'grade'
 
-    GradeIndex = Column('Grade', Integer(11), nullable=False, autoincrement=False, primary_key=True) #Rename ASAP
+    GradeIndex = Column('Grade', Integer(11), nullable=False, autoincrement=False, primary_key=True)  # Rename ASAP
     DepartmentIndex = Column(Integer(11), ForeignKey('department.DepartmentIndex'), nullable=False)
     GradeName = Column(Unicode(50), nullable=False)
 
@@ -339,15 +337,15 @@ class User(Base, TableTop):
     Email = Column(Unicode(256))
     DateType = Column(Integer)
     DateSeparator = Column(Unicode(1))
-    ActiveStudent = Column(Integer, default=0, nullable=False) #boolean
-    ActiveTeacher = Column(Integer, default=0, nullable=False) #boolean
-    SupportTeacher = Column(Integer, default=0, nullable=False) #boolean
+    ActiveStudent = Column(Integer, default=0, nullable=False)  # boolean
+    ActiveTeacher = Column(Integer, default=0, nullable=False)  # boolean
+    SupportTeacher = Column(Integer, default=0, nullable=False)  # boolean
     DepartmentIndex = Column(Integer, ForeignKey('department.DepartmentIndex'))
-    User1 = Column(Integer) #boolean
-    User2 = Column(Integer) #boolean
-    User3 = Column(Integer) #boolean
-    User4 = Column(Integer) #boolean
-    User5 = Column(Integer) #boolean
+    User1 = Column(Integer)  # boolean
+    User2 = Column(Integer)  # boolean
+    User3 = Column(Integer)  # boolean
+    User4 = Column(Integer)  # boolean
+    User5 = Column(Integer)  # boolean
 
     DepartmentObject = relationship(Department, primaryjoin=DepartmentIndex == Department.DepartmentIndex, foreign_keys=[Department.DepartmentIndex], backref=backref('Users', uselist=True), uselist=False)
 
@@ -479,7 +477,7 @@ class Class(Base, TableTop):
     YearIndex = Column(Integer, ForeignKey('year.YearIndex'), nullable=False)
     ClassTeacherUsername = Column(Unicode(50), ForeignKey('user.Username'))
     DepartmentIndex = Column(Integer, ForeignKey('department.DepartmentIndex'), nullable=False)
-    HasConduct = Column(Integer, nullable=False, default=1) #boolean
+    HasConduct = Column(Integer, nullable=False, default=1)  # boolean
 
     GradeObject = relationship(Grade, primaryjoin=GradeIndex == Grade.GradeIndex, foreign_keys=[Grade.GradeIndex], uselist=False)
     DepartmentObject = relationship(Department, primaryjoin=DepartmentIndex == Department.DepartmentIndex, foreign_keys=[Department.DepartmentIndex], uselist=False)
@@ -543,7 +541,7 @@ class ClassTerm(Base, TableTop):
     CTCommentType = Column(Integer, nullable=False, default=0)
     HODCommentType = Column(Integer, nullable=False, default=0)
     PrincipalCommentType = Column(Integer, nullable=False, default=0)
-    CanDoReport = Column(Integer, nullable=False, default=0) #boolean
+    CanDoReport = Column(Integer, nullable=False, default=0)  # boolean
     ReportTemplate = Column(LargeBinary)
     ReportTemplateType = Column(Unicode(300))
 
@@ -644,17 +642,17 @@ class ClassList(Base, TableTop):
     Rank = Column(Integer, nullable=False, default= -1)
     Absences = Column(Integer, nullable=False, default= -1)
     CTComment = Column(UnicodeText)
-    CTCommentDone = Column(Integer, nullable=False, default=0) #boolean
+    CTCommentDone = Column(Integer, nullable=False, default=0)  # boolean
     HODComment = Column(UnicodeText)
-    HODCommentDone = Column(Integer, nullable=False, default=0) #boolean
+    HODCommentDone = Column(Integer, nullable=False, default=0)  # boolean
     HODUsername = Column(Unicode(50), ForeignKey('user.Username'), nullable=False)
     PrincipalComment = Column(UnicodeText)
-    PrincipalCommentDone = Column(Integer, nullable=False, default=0) # boolean
+    PrincipalCommentDone = Column(Integer, nullable=False, default=0)  # boolean
     PrincipalUsername = Column(Unicode(50), ForeignKey('user.Username'), nullable=False)
-    ReportDone = Column(Integer, nullable=False, default=0) # boolean
-    ReportProofread = Column(Integer, nullable=False, default=0) # boolean
-    ReportProofDone = Column(Integer, nullable=False, default=0) # boolean
-    ReportPrinted = Column(Integer, nullable=False, default=0) # boolean
+    ReportDone = Column(Integer, nullable=False, default=0)  # boolean
+    ReportProofread = Column(Integer, nullable=False, default=0)  # boolean
+    ReportProofDone = Column(Integer, nullable=False, default=0)  # boolean
+    ReportPrinted = Column(Integer, nullable=False, default=0)  # boolean
     ClassOrder = Column(Integer)
 
     HODObject = relationship(User, primaryjoin=HODUsername == User.Username, foreign_keys=[User.Username], uselist=False)
@@ -746,7 +744,7 @@ class Log(Base, TableTop):
 
         if isinstance(UserObject, unicode):
             username = UserObject
-        else: # isinstance(UserObject, User):
+        else:  # isinstance(UserObject, User):
             username = UserObject.Username
 
         self.Username = username
@@ -783,6 +781,7 @@ class Permission(Base, TableTop):
     UUID = Column(Unicode(36), nullable=False, index=True)
     Type = Column(Unicode(50), nullable=False, index=True)
     Username = Column(Unicode(50), nullable=False, index=True)
+    Level = Column(Integer, nullable=False, index=True)
 
     UserObject = relationship(User, primaryjoin=Username == User.Username, foreign_keys=[User.Username], backref=backref('PermissionList', uselist=True), uselist=False)
 
@@ -791,7 +790,7 @@ class Permission(Base, TableTop):
     def __repr__(self):
         return u"<Permission(%s - %s)>" % (self.Username, self.Type)
 
-    def __init__(self, UUID, Type, UserObject):
+    def __init__(self, UUID, Type, UserObject, Level=1):
         super(Permission, self).__init__()
         type_check = {("UUID", unicode, False),
                       ("UserObject", (User, unicode), False),
@@ -800,9 +799,12 @@ class Permission(Base, TableTop):
 
         if isinstance(UserObject, unicode):
             username = UserObject
-        else: # isinstance(UserObject, User):
+        else:  # isinstance(UserObject, User):
             username = User.Username
 
+        if Level == None:
+            Level = 1
         self.UUID = UUID
         self.Type = Type
         self.Username = username
+        self.Level = Level

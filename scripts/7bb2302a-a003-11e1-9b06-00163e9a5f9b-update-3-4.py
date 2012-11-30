@@ -1,6 +1,6 @@
-# 7bb2302a-a003-11e1-9b06-00163e9a5f9b-update-1-2.py
+# 7bb2302a-a003-11e1-9b06-00163e9a5f9b-update-2-3.py
 # 
-# Updates CoreDB from revision 1 to revision 2
+# Updates CoreDB from revision 2 to revision 3
 # 
 # This file is part of LESSON.  LESSON is free software: you can
 # redistribute it and/or modify it under the terms of the GNU General Public
@@ -18,8 +18,8 @@
 # Copyright (C) 2012 Jonathan Dieter <jdieter@lesbg.com>
 
 uuid = u'7bb2302a-a003-11e1-9b06-00163e9a5f9b'
-old_version = 1
-new_version = 2
+old_version = 3
+new_version = 4
 
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Table, MetaData
@@ -27,26 +27,19 @@ from sqlalchemy import Column, Integer, Unicode
 
 Base = declarative_base()
 
-class LogIgnoreHost(Base):
-    __tablename__ = u'log_ignore_host'
-
-    LogIgnoreHostIndex = Column(Integer, nullable=False, primary_key=True)
-    HostAddr = Column(Unicode(32), nullable=False)
-
-class Config(Base):
-    __tablename__ = u'config'
+class Permission(Base):
+    __tablename__ = u'permission'
 
     ConfigIndex = Column(Integer, nullable=False, primary_key=True)
     UUID = Column(Unicode(36), nullable=False, index=True)
-    Key = Column(Unicode(50), nullable=False, index=True)
-    Value = Column(Unicode(1024), default=None)
+    Type = Column(Unicode(50), nullable=False, index=True)
+    Username = Column(Unicode(50), nullable=False, index=True)
+    Level = Column(Integer, nullable=False, index=True)
 
 def upgrade(db):
     precheck_upgrade(db)  # Must be at beginning of upgrade script
 
     Base.metadata.create_all(db.engine)
-    db.engine.execute(LogIgnoreHost.__table__.insert().values(HostAddr=u'localhost'))
-    db.engine.execute(Config.__table__.insert().values(UUID=uuid, Key=u'log_level', Value=3))
 
     version_upgrade(db)  # Must be at end of upgrade script, and only run after
                         # upgrade is successful
@@ -125,3 +118,4 @@ if __name__ == "__main__":
     result = db.engine.execute(select([version], version.c.UUID == uuid))
     if result.fetchone()[u'VersionNumber'] != old_version:
         raise ValueError(u"After upgrade/downgrade process, database has been changed")
+
