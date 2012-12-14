@@ -1,18 +1,18 @@
 # lesson/render.py
-#
+# 
 # This file is part of LESSON.  LESSON is free software: you can
 # redistribute it and/or modify it under the terms of the GNU General Public
 # License as published by the Free Software Foundation, version 2 or later.
-#
+# 
 # This program is distributed in the hope that it will be useful, but WITHOUT
 # ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
 # FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
 # details.
-#
+# 
 # You should have received a copy of the GNU General Public License along with
 # this program; if not, write to the Free Software Foundation, Inc., 51
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-#
+# 
 # Copyright (C) 2012 Jonathan Dieter <jdieter@lesbg.com>
 
 uuid = u'7bb2302a-a003-11e1-9b06-00163e9a5f9b'
@@ -27,7 +27,7 @@ import model
 from controller import password
 from controller.permission import Permission
 
-import controller.core_version #@UnusedImport
+import controller.core_version  # @UnusedImport
 
 from controller import log
 
@@ -113,7 +113,7 @@ def start(mode):
         sys.exit(1)
 
 class _ActionMetaClass(type):
-    def __init__(klass, name, bases, attrs): #@NoSelf
+    def __init__(klass, name, bases, attrs):  # @NoSelf
         if attrs.has_key('url'):
             obj = attrs['url']
             priority = None
@@ -167,8 +167,10 @@ class Page:
         self.db = _global_data.db
         self._log = _global_data.log
 
-    def log(self, comment, level=None):
-        user = self.user
+    def log(self, comment, level=None, user=None):
+        if user is None:
+            user = self.user
+
         if level is None:
             if hasattr(self, "log_level") and self.log_level is not None:
                 level = self.log_level
@@ -222,7 +224,7 @@ class Page:
             raise ValueError('Too many arguments.  This should be impossible')
 
     def logged(self):
-        auth = web.ctx.env.get('HTTP_AUTHORIZATION') #@UndefinedVariable
+        auth = web.ctx.env.get('HTTP_AUTHORIZATION')  # @UndefinedVariable
         if auth is None:
             return False
         else:
@@ -230,10 +232,10 @@ class Page:
             username, passwd = base64.decodestring(auth).split(':')
             user = self.session.query(User).filter_by(Username=username).first()
             if user is None:
-                self.log(u"Non-existent username: %s" % (username,), log.ERROR, username)
+                self.log(u"Non-existent username: %s" % (username,), log.ERROR, unicode(username))
                 return False
             if not password.validate(passwd, user.Password):
-                self.log(u"Invalid password for username: %s" % (username,), log.ERROR, username)
+                self.log(u"Invalid password for username: %s" % (username,), log.ERROR, unicode(username))
                 return False
             self.user = user
             self.validator = Permission(user)
@@ -341,11 +343,11 @@ class Page:
                 # Extract link table and key from link section
                 (table, link_table, key) = self.__split_url_segment(item)
 
-                for x in model.TableTop.__subclasses__(): #@UndefinedVariable
+                for x in model.TableTop.__subclasses__():  # @UndefinedVariable
                     if hasattr(x, "Link") and x.Link == table:
                         self.filters.append({'table_class': x, 'table': table, 'link_table': link_table, 'key': key})
                         step = 2
-                if step != 2: # We didn't find any tables that matched
+                if step != 2:  # We didn't find any tables that matched
                     self.errno = 400
                     self.error = u"Table %s isn't in database" % (table,)
                     return None
@@ -414,7 +416,7 @@ class Page:
                                 foreign_key = getattr(link_table_class, x.local_side[0].key)
                                 if item['key'] == unicode(x.remote_side[0].key):
                                     item['key'] = None
-                        else: # No specified key
+                        else:  # No specified key
                             foreign_key = getattr(link_table_class, x.local_side[0].key)
                             if count > 1:  # More than one possible relationship, so don't return any
                                 self.errno = 400
@@ -575,7 +577,7 @@ class ListPage(Page):
             return
 
 #        if self.query is None:
-#            self.errno = 
+#            self.errno =
 
         items = self.query.limit(user_data.limit).offset(user_data.offset)
         print items.statement
@@ -739,7 +741,7 @@ def __version_check(module):
     Check whether all module versions match versions in database.  If they
     don't, only show error page
     """
-    for version_class in module.__subclasses__(): #@UndefinedVariable
+    for version_class in module.__subclasses__():  # @UndefinedVariable
         if len(version_class.__subclasses__()) > 0:
             if not __version_check(version_class):
                 return False
@@ -770,7 +772,7 @@ def __generate_auto_db():
     """
     Automatically create pages from database entries
     """
-    for x in model.TableTop.__subclasses__(): #@UndefinedVariable
+    for x in model.TableTop.__subclasses__():  # @UndefinedVariable
         if hasattr(x, 'Link'):
             globals()['Auto%sListPage' % (x.__name__,)] = type('Auto%sListPage' % (x.__name__,), (ListPage,), {'table': x, 'priority': 90, 'url': '/%s' % (x.Link,), 'base_link': x.Link, 'uuid': x.uuid})
             globals()['Auto%sObjectPage' % (x.__name__,)] = type('Auto%sObjectPage' % (x.__name__,), (ObjectPage,), {'table': x, 'priority': 90, 'url': '/%s/([^/]*)' % (x.Link,), 'base_link': x.Link, 'uuid': x.uuid})
@@ -784,7 +786,7 @@ def __urls_from_url_dict():
             templist.append((value[0], path, value[1]))
         else:
             templist.append((value[0], '/?(.*)' + path, value[1]))
-            #urls.append('/?(.*)' + path)
+            # urls.append('/?(.*)' + path)
     templist.sort()
     for (order, path, klass) in templist:
         print order, path, klass
@@ -803,7 +805,7 @@ __import__('view')
 if __version_check(VersionCheck):
     recursive_import(os.path.join(os.path.dirname(__file__), os.path.join('view', '__init__.py')))
 
-    for x in model.TableTop.__subclasses__(): #@UndefinedVariable
+    for x in model.TableTop.__subclasses__():  # @UndefinedVariable
         __fill_uuid(x)
 
     __generate_auto_db()
