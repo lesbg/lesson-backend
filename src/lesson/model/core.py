@@ -1,20 +1,20 @@
 # lesson/model/core.py
-# 
+#
 # Core database configuration
-# 
+#
 # This file is part of LESSON.  LESSON is free software: you can
 # redistribute it and/or modify it under the terms of the GNU General Public
 # License as published by the Free Software Foundation, version 2 or later.
-# 
+#
 # This program is distributed in the hope that it will be useful, but WITHOUT
 # ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
 # FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
 # details.
-# 
+#
 # You should have received a copy of the GNU General Public License along with
 # this program; if not, write to the Free Software Foundation, Inc., 51
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-# 
+#
 # Copyright (C) 2012 Jonathan Dieter <jdieter@lesbg.com>
 
 uuid = u'7bb2302a-a003-11e1-9b06-00163e9a5f9b'
@@ -49,9 +49,9 @@ class Config(Base, TableTop):
 
     def __init__(self, UUID, Key, Value):
         super(Config, self).__init__()
-        type_check = {("UUID", unicode, False),
+        type_check = (("UUID", unicode, False),
                       ("Key", unicode, False),
-                      ("Value", unicode)}
+                      ("Value", unicode))
         self.check_type(locals(), type_check)
 
         self.UUID = UUID
@@ -77,9 +77,9 @@ class Version(Base, TableTop):
 
     def __init__(self, UUID, Type, VersionNumber):
         super(Version, self).__init__()
-        type_check = {("UUID", unicode, False),
+        type_check = (("UUID", unicode, False),
                       ("Key", unicode, False),
-                      ("VersionNumber", int, False)}
+                      ("VersionNumber", int, False))
         self.check_type(locals(), type_check)
 
         self.UUID = UUID
@@ -106,8 +106,8 @@ class Year(Base, TableTop):
 
     def __init__(self, YearName, YearNumber):
         super(Year, self).__init__()
-        type_check = {("YearName", unicode, False),
-                      ("YearNumber", int, False)}
+        type_check = (("YearName", unicode, False),
+                      ("YearNumber", int, False))
         self.check_type(locals(), type_check)
 
         self.YearName = YearName
@@ -132,7 +132,7 @@ class Department(Base, TableTop):
 
     def __init__(self, DepartmentName):
         super(Department, self).__init__()
-        type_check = {("DepartmentName", unicode, False)}
+        type_check = (("DepartmentName", unicode, False))
         self.check_type(locals(), type_check)
 
         self.DepartmentName = DepartmentName
@@ -160,12 +160,12 @@ class SubjectType(Base, TableTop):
 
     def __init__(self, Title, ShortTitle=None, ID=None, Description=None, Weight=None, HighPriority=False):
         super(SubjectType, self).__init__()
-        type_check = {("Title", unicode, False),
+        type_check = (("Title", unicode, False),
                       ("ShortTitle", unicode),
                       ("ID", unicode),
                       ("Description", unicode),
                       ("Weight", int),
-                      ("HighPriority", bool, False)}
+                      ("HighPriority", bool, False))
         self.check_type(locals(), type_check)
 
         self.Title = Title
@@ -198,9 +198,9 @@ class Grade(Base, TableTop):
 
     def __init__(self, GradeIndex, DepartmentObject, GradeName):
         super(Grade, self).__init__()
-        type_check = {("GradeIndex", int, False),
+        type_check = (("GradeIndex", int, False),
                       ("DepartmentObject", Department, False),
-                      ("GradeName", unicode, False)}
+                      ("GradeName", unicode, False))
         self.check_type(locals(), type_check)
 
         self.GradeIndex = GradeIndex
@@ -229,10 +229,10 @@ class Term(Base, TableTop):
 
     def __init__(self, TermName, TermNumber, DepartmentObject, HasConduct=True):
         super(Term, self).__init__()
-        type_check = {("TermName", unicode, False),
+        type_check = (("TermName", unicode, False),
                       ("TermNumber", int, False),
                       ("DepartmentObject", Department, False),
-                      ("HasConduct", bool, False)}
+                      ("HasConduct", bool, False))
         self.check_type(locals(), type_check)
 
         self.TermName = TermName
@@ -264,8 +264,8 @@ class NonmarkType(Base, TableTop):
 
     def __init__(self, NonmarkTypeName, DepartmentObject):
         super(NonmarkType, self).__init__()
-        type_check = {("NonmarkTypeName", unicode, False),
-                      ("DepartmentOjbect", Department)}
+        type_check = (("NonmarkTypeName", unicode, False),
+                      ("DepartmentOjbect", Department))
         self.check_type(locals(), type_check)
 
         self.NonmarkType = NonmarkType
@@ -300,11 +300,11 @@ class Nonmark(Base, TableTop):
 
     def __init__(self, NonmarkTypeObject, Display, Input=None, MinScore=None, Value=None):
         super(Nonmark, self).__init__()
-        type_check = {("NonmarkTypeObject", NonmarkType, False),
+        type_check = (("NonmarkTypeObject", NonmarkType, False),
                       ("Display", unicode, False),
                       ("Input", unicode),
                       ("MinScore", (int, long)),
-                      ("Value", (int, long))}
+                      ("Value", (int, long)))
         self.check_type(locals(), type_check)
 
         self.NonmarkTypeIndex = NonmarkTypeObject.NonmarkTypeIndex
@@ -362,7 +362,7 @@ class User(Base, TableTop):
                  DepartmentObject=None, User1=None, User2=None, User3=None,
                  User4=None, User5=None):
         super(User, self).__init__()
-        type_check = {("Username", unicode, False),
+        type_check = (("Username", unicode, False),
                       ("FirstName", unicode, False),
                       ("Surname", unicode, False),
                       ("Gender", unicode),
@@ -385,7 +385,7 @@ class User(Base, TableTop):
                       ("User2", bool),
                       ("User3", bool),
                       ("User4", bool),
-                      ("User5", bool)}
+                      ("User5", bool))
         self.check_type(locals(), type_check)
 
         self.Username = Username
@@ -491,12 +491,12 @@ class Class(Base, TableTop):
 
     def __init__(self, ClassName, YearObject, DepartmentObject, GradeObject=None, ClassTeacherObject=None, HasConduct=True):
         super(Class, self).__init__()
-        type_check = {("ClassName", unicode, False),
+        type_check = (("ClassName", unicode, False),
                       ("YearObject", Year, False),
                       ("DepartmentObject", Department, False),
                       ("GradeObject", Grade),
                       ("ClassTeacherObject", User),
-                      ("HasConduct", bool, False)}
+                      ("HasConduct", bool, False))
         self.check_type(locals(), type_check)
 
         self.ClassName = ClassName
@@ -560,7 +560,7 @@ class ClassTerm(Base, TableTop):
                  ConductNM=None, EffortNM=None, ReportTemplate=None,
                  ReportTemplateType=None):
         super(ClassTerm, self).__init__()
-        type_check = {("ClassObject", Class, False),
+        type_check = (("ClassObject", Class, False),
                       ("TermObject", Term, False),
                       ("AbsenceType", int, False),
                       ("AverageType", int, False),
@@ -573,7 +573,7 @@ class ClassTerm(Base, TableTop):
                       ("ConductNM", NonmarkType),
                       ("EffortNM", NonmarkType),
                       ("ReportTemplate", str),
-                      ("ReportTemplateType", unicode)}
+                      ("ReportTemplateType", unicode))
         self.check_type(locals(), type_check)
 
         self.ClassIndex = ClassObject.ClassIndex
@@ -617,8 +617,8 @@ class SupportClass(Base, TableTop):
 
     def __init__(self, ClassTermObject, UserObject):
         super(ClassList, self).__init__()
-        type_check = {("ClassTermObject", ClassTerm, False),
-                      ("UserObject", User, False)}
+        type_check = (("ClassTermObject", ClassTerm, False),
+                      ("UserObject", User, False))
         self.check_type(locals(), type_check)
 
         self.ClassTermIndex = ClassTermObject.ClassTermIndex
@@ -665,9 +665,9 @@ class ClassList(Base, TableTop):
 
     def __init__(self, ClassTermObject, UserObject, ClassOrder=None):
         super(ClassList, self).__init__()
-        type_check = {("ClassTermObject", ClassTerm, False),
+        type_check = (("ClassTermObject", ClassTerm, False),
                       ("UserObject", User, False),
-                      ("ClassOrder", int)}
+                      ("ClassOrder", int))
         self.check_type(locals(), type_check)
 
         self.ClassTermIndex = ClassTermObject.ClassTermIndex
@@ -701,11 +701,11 @@ class Casenote(Base, TableTop):
 
     def __init__(self, StaffObject, StudentObject, Level, Note, Date=datetime.now()):
         super(Casenote, self).__init__()
-        type_check = {("StaffObject", User, False),
+        type_check = (("StaffObject", User, False),
                       ("StudentObject", User, False),
                       ("Level", int, False),
                       ("Note", unicode),
-                      ("Date", datetime, False)}
+                      ("Date", datetime, False))
         self.check_type(locals(), type_check)
 
         self.StaffUsername = StaffObject.Username
@@ -735,11 +735,11 @@ class Log(Base, TableTop):
 
     def __init__(self, Page, UserObject, Level, RemoteHost, Comment=None):
         super(Log, self).__init__()
-        type_check = {("Page", unicode, False),
+        type_check = (("Page", unicode, False),
                       ("UserObject", (User, unicode), False),
                       ("Level", int, False),
                       ("RemoteHost", unicode, False),
-                      ("Comment", unicode)}
+                      ("Comment", unicode))
         self.check_type(locals(), type_check)
 
         if isinstance(UserObject, unicode):
@@ -768,7 +768,7 @@ class LogIgnoreHost(Base, TableTop):
 
     def __init__(self, HostAddr):
         super(LogIgnoreHost, self).__init__()
-        type_check = {("HostAddr", unicode, False)}
+        type_check = (("HostAddr", unicode, False))
         self.check_type(locals(), type_check)
 
         self.HostAddr = HostAddr
@@ -792,9 +792,9 @@ class Permission(Base, TableTop):
 
     def __init__(self, UUID, Type, UserObject, Level=1):
         super(Permission, self).__init__()
-        type_check = {("UUID", unicode, False),
+        type_check = (("UUID", unicode, False),
                       ("UserObject", (User, unicode), False),
-                      ("Type", unicode, False)}
+                      ("Type", unicode, False))
         self.check_type(locals(), type_check)
 
         if isinstance(UserObject, unicode):
