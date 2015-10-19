@@ -1,18 +1,18 @@
 # lesson/render.py
-# 
+#
 # This file is part of LESSON.  LESSON is free software: you can
 # redistribute it and/or modify it under the terms of the GNU General Public
 # License as published by the Free Software Foundation, version 2 or later.
-# 
+#
 # This program is distributed in the hope that it will be useful, but WITHOUT
 # ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
 # FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
 # details.
-# 
+#
 # You should have received a copy of the GNU General Public License along with
 # this program; if not, write to the Free Software Foundation, Inc., 51
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-# 
+#
 # Copyright (C) 2012 Jonathan Dieter <jdieter@lesbg.com>
 
 uuid = u'7bb2302a-a003-11e1-9b06-00163e9a5f9b'
@@ -408,7 +408,7 @@ class Page:
             # Get primary key in relationship
             count = 0
             for x in link_table.iterate_properties:
-                if isinstance(x, sqlalchemy.orm.properties.RelationshipProperty):
+                if isinstance(x, sqlalchemy.orm.properties.RelationshipProperty): # @UndefinedVariable
                     if x.remote_side[0] == table.primary_key[0]:
                         count += 1
                         if item['key'] is not None:
@@ -633,7 +633,7 @@ class ObjectPage(Page):
             return
 
         for r in object_mapper(query).iterate_properties:
-            if not isinstance(r, sqlalchemy.orm.properties.RelationshipProperty):
+            if not isinstance(r, sqlalchemy.orm.properties.RelationshipProperty): # @UndefinedVariable
                 continue
 
             if r.direction.name == "MANYTOONE":
@@ -697,7 +697,10 @@ class AttrPage(Page):
 
         for r in query.__mapper__.iterate_properties:
             key = getattr(query, r.key)
-            if isinstance(r, sqlalchemy.orm.properties.RelationshipProperty):
+            print r
+            is_relationship = isinstance(r, sqlalchemy.orm.properties.RelationshipProperty) # @UndefinedVariable
+            print is_relationship
+            if is_relationship:
                 if key is None or _is_listish(key):
                     continue
                 if key.get_obj_link() is not None:
