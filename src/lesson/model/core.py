@@ -42,8 +42,6 @@ class Config(Base, TableTop):
     Key = Column(Unicode(50), nullable=False, index=True)
     Value = Column(Unicode(1024), default=None)
 
-    Link = "config"
-
     def __repr__(self):
         return u"<Config('%s: %s')>" % (self.Key, self.Value)
 
@@ -69,8 +67,6 @@ class Version(Base, TableTop):
     UUID = Column(Unicode(36), nullable=False, primary_key=True)
     Type = Column(Unicode(50), nullable=False)
     VersionNumber = Column(Integer, nullable=False)
-
-    Link = "versions"
 
     def __repr__(self):
         return u"<Version('%s - %i')>" % (self.Type, self.Version)
@@ -99,8 +95,6 @@ class Year(Base, TableTop):
     YearNumber = Column(Integer, nullable=False)
     YearName = Column('Year', Unicode(50), nullable=False)
 
-    Link = "years"
-
     def __repr__(self):
         return u"<Year('%s')>" % (self.YearName)
 
@@ -124,8 +118,6 @@ class Department(Base, TableTop):
 
     DepartmentIndex = Column(Integer, nullable=False, primary_key=True)
     DepartmentName = Column('Department', Unicode(50), nullable=False)
-
-    Link = "departments"
 
     def __repr__(self):
         return u"<Department('%s')>" % (self.DepartmentName)
@@ -152,8 +144,6 @@ class SubjectType(Base, TableTop):
     Description = Column(UnicodeText)
     Weight = Column(Integer)
     HighPriority = Column(Integer, nullable=False, default=0)  # boolean
-
-    Link = "SubjectTypes"
 
     def __repr__(self):
         return u"<SubjectType('%s')>" % (self.Title)
@@ -257,8 +247,6 @@ class NonmarkType(Base, TableTop):
 
     DepartmentObject = relationship(Department, primaryjoin=DepartmentIndex == Department.DepartmentIndex, foreign_keys=[Department.DepartmentIndex], uselist=False)
 
-    Link = 'nonmark_types'
-
     def __repr__(self):
         return u"<NonmarkType('%s')>" % (self.NonmarkTypeName)
 
@@ -292,8 +280,6 @@ class Nonmark(Base, TableTop):
     Value = Column(Float)
 
     NonmarkTypeObject = relationship(NonmarkType, primaryjoin=NonmarkTypeIndex == NonmarkType.NonmarkTypeIndex, foreign_keys=[NonmarkType.NonmarkTypeIndex], backref=backref('Nonmarks', uselist=True), uselist=False)
-
-    Link = 'nonmark_indexes'
 
     def __repr__(self):
         return u"<NonmarkIndex('%s: %s')>" % (self.NonmarkType.NonmarkType, self.Display)
@@ -348,8 +334,6 @@ class User(Base, TableTop):
     User5 = Column(Integer)  # boolean
 
     DepartmentObject = relationship(Department, primaryjoin=DepartmentIndex == Department.DepartmentIndex, foreign_keys=[Department.DepartmentIndex], backref=backref('Users', uselist=True), uselist=False)
-
-    Link = "users"
 
     def __repr__(self):
         return u"<User('%s %s (%s)')>" % (self.FirstName, self.Surname, self.Username)
@@ -484,8 +468,6 @@ class Class(Base, TableTop):
     YearObject = relationship(Year, primaryjoin=YearIndex == Year.YearIndex, foreign_keys=[Year.YearIndex], uselist=False)
     ClassTeacherObject = relationship(User, primaryjoin=ClassTeacherUsername == User.Username, foreign_keys=[User.Username], uselist=False)
 
-    Link = "classes"
-
     def __repr__(self):
         return u"<Class('%s - %s')>" % (self.Year.YearName, self.ClassName)
 
@@ -610,8 +592,6 @@ class SupportClass(Base, TableTop):
     UserObject = relationship(User, primaryjoin=Username == User.Username, foreign_keys=[User.Username], uselist=False)
     ClassTermObject = relationship(ClassTerm, primaryjoin=ClassTermIndex == ClassTerm.ClassTermIndex, foreign_keys=[ClassTerm.ClassTermIndex], uselist=False)
 
-    Link = 'support_class'
-
     def __repr__(self):
         return u"<SupportClass('%s: %s - %s - %s')>" % (self.UserObject.Username, self.ClassTermObject.Term.TermName, self.ClassTermObject.ClassObject.YearObject.YearName, self.ClassTermObject.ClassObject.ClassName)
 
@@ -694,8 +674,6 @@ class Casenote(Base, TableTop):
     StaffObject = relationship(User, primaryjoin=StaffUsername == User.Username, foreign_keys=[User.Username], uselist=False)
     StudentObject = relationship(User, primaryjoin=StudentUsername == User.Username, foreign_keys=[User.Username], uselist=False)
 
-    Link = "casenotes"
-
     def __repr__(self):
         return u"<Casenote('%s -> %s (%s)')>" % (self.StaffUsername, self.StudentUsername, self.Date)
 
@@ -728,8 +706,6 @@ class Log(Base, TableTop):
 
     UserObject = relationship(User, primaryjoin=Username == User.Username, foreign_keys=[User.Username], backref=backref('Logs', uselist=True), uselist=False)
 
-    Link = "logs"
-
     def __repr__(self):
         return u"<Log('%i - %s - %s')>" % (self.Level, self.Username, self.Comment)
 
@@ -761,8 +737,6 @@ class LogIgnoreHost(Base, TableTop):
     LogIgnoreHostIndex = Column(Integer, nullable=False, primary_key=True)
     HostAddr = Column(Unicode(32), nullable=False)
 
-    Link = "ignore_hosts"
-
     def __repr__(self):
         return u"<LogIgnoreHost('%s')>" % (self.HostAddr)
 
@@ -774,7 +748,7 @@ class LogIgnoreHost(Base, TableTop):
         self.HostAddr = HostAddr
 
 # Any changes to the Permission table *must* also be changed in model/__init__.py
-class Permission(Base, TableTop):
+class Permission(Base):
     __tablename__ = u'permission'
 
     ConfigIndex = Column(Integer, nullable=False, primary_key=True)
@@ -784,8 +758,6 @@ class Permission(Base, TableTop):
     Level = Column(Integer, nullable=False, index=True)
 
     UserObject = relationship(User, primaryjoin=Username == User.Username, foreign_keys=[User.Username], backref=backref('PermissionList', uselist=True), uselist=False)
-
-    Link = "permissions"
 
     def __repr__(self):
         return u"<Permission(%s - %s)>" % (self.Username, self.Type)
