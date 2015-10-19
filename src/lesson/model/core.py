@@ -187,8 +187,8 @@ class Grade(Base, TableTop):
 
     __tablename__ = 'grade'
 
-    GradeIndex = Column('Grade', Integer(11), nullable=False, autoincrement=False, primary_key=True)  # Rename ASAP
-    DepartmentIndex = Column(Integer(11), ForeignKey('department.DepartmentIndex'), nullable=False)
+    GradeIndex = Column('Grade', Integer, nullable=False, autoincrement=False, primary_key=True)  # Rename ASAP
+    DepartmentIndex = Column(Integer, ForeignKey('department.DepartmentIndex'), nullable=False)
     GradeName = Column(Unicode(50), nullable=False)
 
     DepartmentObject = relationship(Department, primaryjoin=DepartmentIndex == Department.DepartmentIndex, foreign_keys=[Department.DepartmentIndex], uselist=False)
@@ -216,10 +216,10 @@ class Term(Base, TableTop):
 
     __tablename__ = 'term'
 
-    TermIndex = Column(Integer(11), nullable=False, primary_key=True)
-    TermNumber = Column(Integer(11), nullable=False)
+    TermIndex = Column(Integer, nullable=False, primary_key=True)
+    TermNumber = Column(Integer, nullable=False)
     TermName = Column(Unicode(50), nullable=False)
-    DepartmentIndex = Column(Integer(11), ForeignKey('department.DepartmentIndex'), nullable=False)
+    DepartmentIndex = Column(Integer, ForeignKey('department.DepartmentIndex'), nullable=False)
     HasConduct = Column(Integer(1), nullable=False, default=1)
 
     DepartmentObject = relationship(Department, primaryjoin=DepartmentIndex == Department.DepartmentIndex, foreign_keys=[Department.DepartmentIndex], uselist=False)
@@ -683,8 +683,8 @@ class Casenote(Base, TableTop):
 
     __tablename__ = 'casenote'
 
-    CasenoteIndex = Column('CaseNoteIndex', Integer(11), nullable=False, primary_key=True)
-    CasenoteGroup = Column('CaseNoteGroup', Integer(11))
+    CasenoteIndex = Column('CaseNoteIndex', Integer, nullable=False, primary_key=True)
+    CasenoteGroup = Column('CaseNoteGroup', Integer)
     StaffUsername = Column('WorkerUsername', Unicode(50), ForeignKey('user.Username'), nullable=False)
     StudentUsername = Column(Unicode(50), ForeignKey('user.Username'), nullable=False)
     Note = Column(UnicodeText)
