@@ -50,7 +50,7 @@ urls = []
 
 DEBUG = True
 
-class _GlobalData:
+class _GlobalData(object):
     def __init__(self):
         # self.session = None
         # self.store = None
@@ -102,6 +102,8 @@ def _die_on_string(obj):
             raise ValueError('All strings must be unicode strings')
 
 def start(mode):
+    print "Starting in %s mode" % mode
+    
     app = web.application(urls, globals())
     if mode == "debug":
         app.run()
