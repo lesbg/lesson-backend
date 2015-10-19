@@ -26,11 +26,10 @@ import render
 
 mode = "debug"
 
-try:
-    from mod_wsgi import version #@UnresolvedImport
-    print "Detected mod_wgi version %i.%i" % version
+if __name__.startswith('_mod_wsgi_'):
+    print "Detected mod_wsgi; running in WSGI mode"
     mode = "wsgi"
-except:
-    pass
+else:
+    print "Running in debug mode"
 
 application = render.start(mode)
