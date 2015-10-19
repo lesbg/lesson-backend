@@ -220,7 +220,7 @@ class Term(Base, TableTop):
     TermNumber = Column(Integer, nullable=False)
     TermName = Column(Unicode(50), nullable=False)
     DepartmentIndex = Column(Integer, ForeignKey('department.DepartmentIndex'), nullable=False)
-    HasConduct = Column(Integer(1), nullable=False, default=1)
+    HasConduct = Column(Integer, nullable=False, default=1)
 
     DepartmentObject = relationship(Department, primaryjoin=DepartmentIndex == Department.DepartmentIndex, foreign_keys=[Department.DepartmentIndex], uselist=False)
 
