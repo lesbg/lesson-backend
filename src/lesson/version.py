@@ -1,19 +1,21 @@
-# lesson/version.py
-#
-# This file is part of LESSON.  LESSON is free software: you can
-# redistribute it and/or modify it under the terms of the GNU General Public
-# License as published by the Free Software Foundation, version 2 or later.
-#
-# This program is distributed in the hope that it will be useful, but WITHOUT
-# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
-# FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
-# details.
-#
-# You should have received a copy of the GNU General Public License along with
-# this program; if not, write to the Free Software Foundation, Inc., 51
-# Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-#
-# Copyright (C) 2012, 2015 Jonathan Dieter <jdieter@lesbg.com>
+"""
+version
+
+This file is part of LESSON.  LESSON is free software: you can
+redistribute it and/or modify it under the terms of the GNU General Public
+License as published by the Free Software Foundation, version 2 or later.
+
+This program is distributed in the hope that it will be useful, but WITHOUT
+ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+details.
+
+You should have received a copy of the GNU General Public License along with
+this program; if not, write to the Free Software Foundation, Inc., 51
+Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+
+Copyright (C) 2012, 2015 Jonathan Dieter <jdieter@lesbg.com>
+"""
 
 from model.core import Version
 import subprocess, os.path
@@ -76,6 +78,7 @@ class VersionCheck(object):
     def __check_file(self, start_ver, stop_ver):            
         ufile = os.path.join(self.script_dir,
                              "updates/%s/update-%i-%i.%s" % (self.uuid, start_ver, stop_ver, self.extension))
+        print ufile
 
         # Check whether update exists for start_ver -> stop_ver
         if self.check_file(ufile):
@@ -116,13 +119,13 @@ class VersionCheck(object):
         cur_ver = session.query(Version).get(self.uuid)
         session.close()
         if cur_ver.VersionNumber > self.version:
-            return (False, u"The %s version in the database is %i, while our version is %i.  Please upgrade module %s" % (cur_ver.Type, cur_ver.Version, self.version, cur_ver.Type))
+            return (False, u"The %s version in the database is %i, while our version is %i.  Please upgrade module %s" % (cur_ver.Type, cur_ver.VersionNumber, self.version, cur_ver.Type))
         elif cur_ver.VersionNumber < self.version:
             script_files = [None]
             if self.script_dir is not None:
                 script_files = self.__check_file(cur_ver.VersionNumber, self.version)
             if script_files == [None]:
-                return (False, u"The %s version in the database is %i, while our version is %i.  Please manually upgrade the database for %s" % (cur_ver.Type, cur_ver.Version, self.version, cur_ver.Type))
+                return (False, u"The %s version in the database is %i, while our version is %i.  Please manually upgrade the database for %s" % (cur_ver.Type, cur_ver.VersionNumber, self.version, cur_ver.Type))
             for ufile in script_files:
                 retval, error = self.run_file(ufile)
                 if not retval:

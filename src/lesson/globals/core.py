@@ -1,5 +1,5 @@
 """
-view.index
+globals.core
 
 This file is part of LESSON.  LESSON is free software: you can
 redistribute it and/or modify it under the terms of the GNU General Public
@@ -14,16 +14,16 @@ You should have received a copy of the GNU General Public License along with
 this program; if not, write to the Free Software Foundation, Inc., 51
 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
-Copyright (C) 2012 Jonathan Dieter <jdieter@lesbg.com>
+Copyright (C) 2015 Jonathan Dieter <jdieter@lesbg.com>
 """
 
-uuid = u'7bb2302a-a003-11e1-9b06-00163e9a5f9b'
+REL_FATHER = 1
+REL_MOTHER = 2
+REL_GRANDPARENT = 3
+REL_GUARDIAN = 4
+REL_HOME = 5
 
-from render import Page
-
-class IndexPage(Page):
-    url = "/"
-    url_absolute = True
-
-    def get(self):
-        return {u'user': self.user.Username, u'firstname': self.user.FirstName, u'surname': self.user.Surname}
+PHONE_HOME = 1
+PHONE_MOBILE = 2
+PHONE_WORK = 3
+PHONE_OTHER = 4
