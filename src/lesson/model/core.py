@@ -323,9 +323,9 @@ class Family(Base):
     __tablename__ = u'family'
     
     FamilyCode = Column(Unicode(50), nullable=False, primary_key=True)
-    FamilyName = Column(UnicodeText, nullable=False, index=True)
-    FatherName = Column(UnicodeText, index=True)
-    MotherName = Column(UnicodeText, index=True)
+    FamilyName = Column(UnicodeText(100), nullable=False, index=True)
+    FatherName = Column(UnicodeText(100), index=True)
+    MotherName = Column(UnicodeText(100), index=True)
    
     Link = "family"
 
@@ -517,7 +517,7 @@ class Phone(Base):
     FamilyCode = Column(Unicode(50), ForeignKey('family.FamilyCode'), nullable=False, index=True)
     Relationship = Column(Integer, index=True)
     Type = Column(Integer, index=True)
-    Comment = Column(UnicodeText, index=True)
+    Comment = Column(UnicodeText)
    
     FamilyObject = relationship(Family, primaryjoin=FamilyCode == Family.FamilyCode, foreign_keys=[Family.FamilyCode], backref=backref('Phone', uselist=True), uselist=False)
     Link = "phone"
