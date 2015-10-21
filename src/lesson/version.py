@@ -77,7 +77,7 @@ class VersionCheck(object):
     # Check whether an update file exists in the form updates/<uuid>/update_<start_ver>_<end_ver>.<extension>
     def __check_file(self, start_ver, stop_ver):            
         ufile = os.path.join(self.script_dir,
-                             "updates/%s/update-%i-%i.%s" % (self.uuid, start_ver, stop_ver, self.extension))
+                             "updates/%s/update_%i_%i.%s" % (self.uuid, start_ver, stop_ver, self.extension))
         print ufile
 
         # Check whether update exists for start_ver -> stop_ver
