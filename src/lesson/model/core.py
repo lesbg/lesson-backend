@@ -1,24 +1,25 @@
-# lesson/model/core.py
-#
-# Core database configuration
-#
-# This file is part of LESSON.  LESSON is free software: you can
-# redistribute it and/or modify it under the terms of the GNU General Public
-# License as published by the Free Software Foundation, version 2 or later.
-#
-# This program is distributed in the hope that it will be useful, but WITHOUT
-# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
-# FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
-# details.
-#
-# You should have received a copy of the GNU General Public License along with
-# this program; if not, write to the Free Software Foundation, Inc., 51
-# Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-#
-# Copyright (C) 2012 Jonathan Dieter <jdieter@lesbg.com>
+"""
+model.core
+
+This file is part of LESSON.  LESSON is free software: you can
+redistribute it and/or modify it under the terms of the GNU General Public
+License as published by the Free Software Foundation, version 2 or later.
+
+This program is distributed in the hope that it will be useful, but WITHOUT
+ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+details.
+
+You should have received a copy of the GNU General Public License along with
+this program; if not, write to the Free Software Foundation, Inc., 51
+Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+
+Copyright (C) 2012 Jonathan Dieter <jdieter@lesbg.com>
+"""
+from sqlalchemy.orm.relationships import foreign
 
 uuid = u'7bb2302a-a003-11e1-9b06-00163e9a5f9b'
-version = 4
+version = 5
 
 from sqlalchemy import ForeignKey
 from sqlalchemy.orm import relationship, backref
@@ -313,7 +314,43 @@ class Nonmark(Base, TableTop):
         self.MinScore = MinScore
         self.Value = Value
 
+class Family(Base):
+    """
+    This class contains family information.  The primary key is the family code
+    and the mandatory fields include FamilyCode and FamilyName
+    """
+    
+    __tablename__ = u'family'
+    
+    FamilyCode = Column(Unicode(50), nullable=False, primary_key=True)
+    FamilyName = Column(UnicodeText, nullable=False, index=True)
+    FatherName = Column(UnicodeText, index=True)
+    MotherName = Column(UnicodeText, index=True)
+   
+    Link = "family"
 
+    def __repr__(self):
+        return u"<Family('%s: %s %s')>" % (self.FamilyCode, self.FatherName, self.FamilyName)
+
+    def __init__(self, FamilyCode, FamilyName, FatherName=None, MotherName=None):
+        super(Family, self).__init__()
+        type_check = (("FamilyCode", unicode, False),
+                      ("FamilyName", unicode, False),
+                      ("FatherName", unicode),
+                      ("MotherName", unicode))
+        self.check_type(locals(), type_check)
+
+        self.FamilyCode = FamilyCode
+        self.FamilyName = FamilyName
+        if FatherName is not None or FatherName == u'':
+            self.FatherName = FatherName
+        else:
+            self.FatherName = None
+        if MotherName is not None or MotherName == u'':
+            self.MotherName = MotherName
+        else:
+            self.MotherName = None
+        
 class User(Base, TableTop):
     """
     This class contains most user information.  The primary key is the
@@ -323,6 +360,7 @@ class User(Base, TableTop):
     __tablename__ = 'user'
 
     Username = Column(Unicode(50), nullable=False, primary_key=True)
+    FamilyCode = Column(Unicode(50), ForeignKey('family.FamilyCode'), index=True)
     FirstName = Column(Unicode(50), nullable=False)
     Surname = Column(Unicode(50), nullable=False)
     Gender = Column(Unicode(1))
@@ -348,13 +386,13 @@ class User(Base, TableTop):
     User5 = Column(Integer)  # boolean
 
     DepartmentObject = relationship(Department, primaryjoin=DepartmentIndex == Department.DepartmentIndex, foreign_keys=[Department.DepartmentIndex], backref=backref('Users', uselist=True), uselist=False)
-
+    FamilyObject = relationship(Family, primaryjoin=FamilyCode == Family.FamilyCode, foreign_keys=[Family.FamilyCode], backref=backref('Users', uselist=True), uselist=False)
     Link = "users"
 
     def __repr__(self):
         return u"<User('%s %s (%s)')>" % (self.FirstName, self.Surname, self.Username)
 
-    def __init__(self, Username, FirstName, Surname, Gender=None,
+    def __init__(self, Username, FirstName, Surname, FamilyCode=None, Gender=None,
                  PhoneNumber=None, CellNumber=None, DOB=None, Password=None,
                  Password2=None, Permissions=0, Title=None, House=None,
                  Email=None, DateType=None, DateSeparator=None,
@@ -363,6 +401,7 @@ class User(Base, TableTop):
                  User4=None, User5=None):
         super(User, self).__init__()
         type_check = (("Username", unicode, False),
+                      ("FamilyCode", unicode)
                       ("FirstName", unicode, False),
                       ("Surname", unicode, False),
                       ("Gender", unicode),
@@ -389,6 +428,10 @@ class User(Base, TableTop):
         self.check_type(locals(), type_check)
 
         self.Username = Username
+        if FamilyCode is not None and FamilyCode != u'':
+            self.FamilyCode = FamilyCode
+        else:
+            self.FamilyCode = None
         self.FirstName = FirstName
         self.Surname = Surname
         self.Gender = Gender
@@ -461,6 +504,41 @@ class User(Base, TableTop):
         else:
             self.User5 = None
 
+class Phone(Base):
+    """
+    This class contains information about each phone number.  The primary key
+    is auto-incrementing, and mandatory fields include Number and FamilyCode
+    """
+    
+    __tablename__ = u'phone'
+    
+    PhoneIndex = Column(Integer, nullable=False, primary_key=True)
+    Number = Column(Unicode(50), nullable=False, index=True)
+    FamilyCode = Column(Unicode(50), ForeignKey('family.FamilyCode'), nullable=False, index=True)
+    Relationship = Column(Integer, index=True)
+    Type = Column(Integer, index=True)
+    Comment = Column(UnicodeText, index=True)
+   
+    FamilyObject = relationship(Family, primaryjoin=FamilyCode == Family.FamilyCode, foreign_keys=[Family.FamilyCode], backref=backref('Phone', uselist=True), uselist=False)
+    Link = "phone"
+
+    def __repr__(self):
+        return u"<Phone('%s: %s %s')>" % (self.FamilyCode, self.FamilyObject.FamilyName, self.Number)
+
+    def __init__(self, Number, FamilyCode, Relationship=None, Type=None, Comment=None):
+        super(Family, self).__init__()
+        type_check = (("Number", unicode, False),
+                      ("FamilyCode", unicode, False),
+                      ("Relationship", int),
+                      ("Type", int),
+                      ("Comment", unicode))
+        self.check_type(locals(), type_check)
+
+        self.Number = Number
+        self.FamilyCode = FamilyCode
+        self.Relationship = Relationship
+        self.Type = Type
+        self.Comment = Comment
 
 class Class(Base, TableTop):
     """

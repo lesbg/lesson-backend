@@ -1,21 +1,21 @@
-# update_4_5.py
-#
-# Updates CoreDB from revision 4 to revision 5
-#
-# This file is part of LESSON.  LESSON is free software: you can
-# redistribute it and/or modify it under the terms of the GNU General Public
-# License as published by the Free Software Foundation, version 2 or later.
-#
-# This program is distributed in the hope that it will be useful, but WITHOUT
-# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
-# FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
-# details.
-#
-# You should have received a copy of the GNU General Public License along with
-# this program; if not, write to the Free Software Foundation, Inc., 51
-# Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-#
-# Copyright (C) 2015 Jonathan Dieter <jdieter@lesbg.com>
+"""
+update_4_5
+
+This file is part of LESSON.  LESSON is free software: you can
+redistribute it and/or modify it under the terms of the GNU General Public
+License as published by the Free Software Foundation, version 2 or later.
+
+This program is distributed in the hope that it will be useful, but WITHOUT
+ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+details.
+
+You should have received a copy of the GNU General Public License along with
+this program; if not, write to the Free Software Foundation, Inc., 51
+Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+
+Copyright (C) 2015 Jonathan Dieter <jdieter@lesbg.com>
+"""
 
 uuid = u'7bb2302a-a003-11e1-9b06-00163e9a5f9b'
 old_version = 4
@@ -31,7 +31,7 @@ class Family(Base):
     __tablename__ = u'family'
     
     FamilyCode = Column(Unicode(50), nullable=False, primary_key=True)
-    FamilyName = Column(UnicodeText, index=True)
+    FamilyName = Column(UnicodeText, nullable=False, index=True)
     FatherName = Column(UnicodeText, index=True)
     MotherName = Column(UnicodeText, index=True)
     
@@ -39,15 +39,74 @@ class Phone(Base):
     __tablename__ = u'phone'
     
     PhoneIndex = Column(Integer, nullable=False, primary_key=True)
+    Number = Column(Unicode(50), nullable=False, index=True)
     FamilyCode = Column(Unicode(50), nullable=False, index=True)
     Relationship = Column(Integer, index=True)
+    Type = Column(Integer, index=True)
     Comment = Column(UnicodeText, index=True)
-    
 
+class User_Old(Base):
+    __tablename__ = u'user'
+
+    Username = Column(Unicode(50), nullable=False, primary_key=True)
+    FirstName = Column(Unicode(50), nullable=False, index=True)
+    Surname = Column(Unicode(50), nullable=False, index=True)
+    Gender = Column(Unicode(1), index=True)
+    PhoneNumber = Column(Unicode(20))
+    CellNumber = Column(Unicode(20))
+    DOB = Column(Date)
+    Password = Column(String(255))
+    Password2 = Column(String(255))
+    Permissions = Column(Integer, default=0, nullable=False, index=True)
+    Title = Column(Unicode(10))
+    House = Column(Unicode(1), index=True)
+    Email = Column(Unicode(256))
+    DateType = Column(Integer)
+    DateSeparator = Column(Unicode(1))
+    ActiveStudent = Column(Integer, default=0, nullable=False, index=True)  # boolean
+    ActiveTeacher = Column(Integer, default=0, nullable=False, index=True)  # boolean
+    SupportTeacher = Column(Integer, default=0, nullable=False, index=True)  # boolean
+    DepartmentIndex = Column(Integer, index=True)
+    User1 = Column(Integer, index=True)  # boolean
+    User2 = Column(Integer, index=True)  # boolean
+    User3 = Column(Integer, index=True)  # boolean
+    User4 = Column(Integer, index=True)  # boolean
+    User5 = Column(Integer, index=True)  # boolean
+        
+class User_New(Base):
+    __tablename__ = u'user2'
+
+    Username = Column(Unicode(50), nullable=False, primary_key=True)
+    FamilyCode = Column(Unicode(50), index=True)
+    FirstName = Column(Unicode(50), nullable=False, index=True)
+    Surname = Column(Unicode(50), nullable=False, index=True)
+    Gender = Column(Unicode(1), index=True)
+    PhoneNumber = Column(Unicode(20))
+    CellNumber = Column(Unicode(20))
+    DOB = Column(Date)
+    Password = Column(String(255))
+    Password2 = Column(String(255))
+    Permissions = Column(Integer, default=0, nullable=False, index=True)
+    Title = Column(Unicode(10))
+    House = Column(Unicode(1), index=True)
+    Email = Column(Unicode(256))
+    DateType = Column(Integer)
+    DateSeparator = Column(Unicode(1))
+    ActiveStudent = Column(Integer, default=0, nullable=False, index=True)  # boolean
+    ActiveTeacher = Column(Integer, default=0, nullable=False, index=True)  # boolean
+    SupportTeacher = Column(Integer, default=0, nullable=False, index=True)  # boolean
+    DepartmentIndex = Column(Integer, index=True)
+    User1 = Column(Integer, index=True)  # boolean
+    User2 = Column(Integer, index=True)  # boolean
+    User3 = Column(Integer, index=True)  # boolean
+    User4 = Column(Integer, index=True)  # boolean
+    User5 = Column(Integer, index=True)  # boolean
+    
 def upgrade(db):
     precheck_upgrade(db)  # Must be at beginning of upgrade script
 
     Base.metadata.create_all(db.engine)
+    User_New.__table__.insert().from_select(User_Old.__table__.select())
 
     version_upgrade(db)  # Must be at end of upgrade script, and only run after
                          # upgrade is successful
