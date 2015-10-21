@@ -314,7 +314,7 @@ class Nonmark(Base, TableTop):
         self.MinScore = MinScore
         self.Value = Value
 
-class Family(Base):
+class Family(Base, TableTop):
     """
     This class contains family information.  The primary key is the family code
     and the mandatory fields include FamilyCode and FamilyName
@@ -327,7 +327,7 @@ class Family(Base):
     FatherName = Column(UnicodeText(100), index=True)
     MotherName = Column(UnicodeText(100), index=True)
    
-    Link = "family"
+    Link = "families"
 
     def __repr__(self):
         return u"<Family('%s: %s %s')>" % (self.FamilyCode, self.FatherName, self.FamilyName)
@@ -504,7 +504,7 @@ class User(Base, TableTop):
         else:
             self.User5 = None
 
-class Phone(Base):
+class Phone(Base, TableTop):
     """
     This class contains information about each phone number.  The primary key
     is auto-incrementing, and mandatory fields include Number and FamilyCode
