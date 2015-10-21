@@ -1,6 +1,6 @@
-# scripts/update_core_4_5.py
+# update_3_4.py
 #
-# Updates CoreDB from revision 4 to revision 5
+# Updates CoreDB from revision 3 to revision 4
 #
 # This file is part of LESSON.  LESSON is free software: you can
 # redistribute it and/or modify it under the terms of the GNU General Public
@@ -18,8 +18,8 @@
 # Copyright (C) 2012 Jonathan Dieter <jdieter@lesbg.com>
 
 uuid = u'7bb2302a-a003-11e1-9b06-00163e9a5f9b'
-old_version = 4
-new_version = 5
+old_version = 3
+new_version = 4
 
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Table, MetaData
@@ -27,22 +27,6 @@ from sqlalchemy import Column, Integer, Unicode, UnicodeText, Boolean
 
 Base = declarative_base()
 
-class Family(Base):
-    __tablename__ = u'family'
-    
-    FamilyCode = Column(Unicode(50), nullable=False, primary_key=True)
-    FamilyName = Column(UnicodeText, index=True)
-    FatherName = Column(UnicodeText, index=True)
-    MotherName = Column(UnicodeText, index=True)
-    
-class Phone(Base):
-    __tablename__ = u'phone'
-    
-    PhoneIndex = Column(Integer, nullable=False, primary_key=True)
-    FamilyCode = Column(Unicode(50), nullable=False, index=True)
-    Relationship = Column(Integer, index=True)
-    Comment = Column(UnicodeText, index=True)
-    
 class Permission(Base):
     __tablename__ = u'permission'
 

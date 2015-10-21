@@ -13,7 +13,7 @@
 # this program; if not, write to the Free Software Foundation, Inc., 51
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
-# Copyright (C) 2012 Jonathan Dieter <jdieter@lesbg.com>
+# Copyright (C) 2012, 2015 Jonathan Dieter <jdieter@lesbg.com>
 
 from model.core import Version
 import subprocess, os.path
@@ -72,9 +72,10 @@ class VersionCheck(object):
         except:
             return (False, u"Error running %s" % (ufile,))
 
-    def __check_file(self, start_ver, stop_ver):
-        ufile = os.path.join("%s" % (self.script_dir,),
-                             "%s-update-%i-%i.%s" % (self.uuid, start_ver, stop_ver, self.extension))
+    # Check whether an update file exists in the form updates/<uuid>/update_<start_ver>_<end_ver>.<extension>
+    def __check_file(self, start_ver, stop_ver):            
+        ufile = os.path.join(self.script_dir,
+                             "updates/%s/update-%i-%i.%s" % (self.uuid, start_ver, stop_ver, self.extension))
 
         # Check whether update exists for start_ver -> stop_ver
         if self.check_file(ufile):

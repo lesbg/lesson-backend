@@ -1,4 +1,4 @@
-# 7bb2302a-a003-11e1-9b06-00163e9a5f9b-update-2-3.py
+# update_2_3.py
 #
 # Updates CoreDB from revision 2 to revision 3
 #

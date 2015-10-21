@@ -1,4 +1,4 @@
-# 7bb2302a-a003-11e1-9b06-00163e9a5f9b-update-1-2.py
+# update_1_2.py
 # 
 # Updates CoreDB from revision 1 to revision 2
 # 
