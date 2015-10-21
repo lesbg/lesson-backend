@@ -23,7 +23,7 @@ new_version = 5
 
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Table, MetaData
-from sqlalchemy import Column, Integer, Unicode, UnicodeText, Boolean
+from sqlalchemy import Column, Integer, Unicode, UnicodeText, Boolean, Date, String
 
 Base = declarative_base()
 
@@ -31,9 +31,9 @@ class Family(Base):
     __tablename__ = u'family'
     
     FamilyCode = Column(Unicode(50), nullable=False, primary_key=True)
-    FamilyName = Column(UnicodeText, nullable=False, index=True)
-    FatherName = Column(UnicodeText, index=True)
-    MotherName = Column(UnicodeText, index=True)
+    FamilyName = Column(UnicodeText(100), nullable=False, index=True)
+    FatherName = Column(UnicodeText(100), index=True)
+    MotherName = Column(UnicodeText(100), index=True)
     
 class Phone(Base):
     __tablename__ = u'phone'
@@ -43,7 +43,7 @@ class Phone(Base):
     FamilyCode = Column(Unicode(50), nullable=False, index=True)
     Relationship = Column(Integer, index=True)
     Type = Column(Integer, index=True)
-    Comment = Column(UnicodeText, index=True)
+    Comment = Column(UnicodeText)
 
 class User_Old(Base):
     __tablename__ = u'user'
@@ -106,15 +106,31 @@ def upgrade(db):
     precheck_upgrade(db)  # Must be at beginning of upgrade script
 
     Base.metadata.create_all(db.engine)
-    User_New.__table__.insert().from_select(User_Old.__table__.select())
-
+    User_New.__table__.drop(db.engine)
+    User_New.__table__.create(db.engine)
+    db.engine.execute(User_New.__table__.insert().from_select(User_Old.__table__.columns, User_Old.__table__.select()))
+    User_
+    User_Old.__table__.rename('user-temp')
+    User_New.__table__.rename('user')
     version_upgrade(db)  # Must be at end of upgrade script, and only run after
                          # upgrade is successful
 
 def downgrade(db):
     precheck_downgrade(db)  # Must be at beginning of downgrade script
 
-    Base.metadata.drop_all(db.engine)
+    User_New.__tablename__ = 'user'
+    User_Old.__tablename__ = 'user2'
+    db.engine.create(User_Old)
+    columns = User_New.__table__.columns
+    print columns
+    if 'FamilyCode' in columns:
+        columns.remove('FamilyCode')
+    db.engine.execute(User_Old.__table__.insert().from_select(columns, User_New.__table__.select()))
+    User_New.rename('user-temp')
+    User_Old.rename('user')
+    User_New.rename('user2')
+    print User_Old.__tablename__, User_New.__tablename__
+    #Base.metadata.drop_all(db.engine)
 
     version_downgrade(db)  # Must be at end of upgrade script, and only run
                            # after downgrade is successful
