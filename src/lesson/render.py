@@ -16,6 +16,7 @@ Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 Copyright (C) 2012 Jonathan Dieter <jdieter@lesbg.com>
 """
+from sqlalchemy.sql.schema import Column
 
 uuid = u'7bb2302a-a003-11e1-9b06-00163e9a5f9b'
 
@@ -373,6 +374,7 @@ class Page:
             self.query = None
             return
 
+        print self.filters
         self.filters.reverse()
         query = self.session.query(self.table)
 
@@ -384,7 +386,7 @@ class Page:
             foreign_key = None
             table = class_mapper(item['table_class'])
 
-            # Get linked table in relationship
+            # Get linked table in relationship and store in link_table
             link_table = None
             if item['link_table'] is None:
                 link_table = used_table_list[0][0]
@@ -407,21 +409,33 @@ class Page:
                 if old_table[1] == item['table_class']:
                     item['table_class'] = aliased(item['table_class'])
 
+            # Insert current table to the front of the used table list
             used_table_list.insert(0, (table, item['table_class']))
-
+            
             # Get primary key in relationship
             count = 0
             for x in link_table.iterate_properties:
                 if isinstance(x, sqlalchemy.orm.properties.RelationshipProperty): # @UndefinedVariable
-                    if x.remote_side[0] == table.primary_key[0]:
+                    for key, value in x.__dict__.items():
+                        print("{: <11}".format(key), " --> ", value)
+                    remote = None
+                    local = None
+                    # Deal with sqlachemy changes
+                    if hasattr(x, 'local_remote_pairs'): # sqlachemy 0.9+
+                        local = x.local_remote_pairs[0][0]
+                        remote = x.local_remote_pairs[0][1]
+                    else:                                # sqlalchemy < 0.9
+                        remote = x.remote_side[0]
+                        local = x.local_side[0]
+                    if remote == table.primary_key[0]:
                         count += 1
                         if item['key'] is not None:
-                            if item['key'] == unicode(x.local_side[0].key):
-                                foreign_key = getattr(link_table_class, x.local_side[0].key)
-                                if item['key'] == unicode(x.remote_side[0].key):
+                            if item['key'] == unicode(local.key):
+                                foreign_key = getattr(link_table_class, local.key)
+                                if item['key'] == unicode(remote.key):
                                     item['key'] = None
                         else:  # No specified key
-                            foreign_key = getattr(link_table_class, x.local_side[0].key)
+                            foreign_key = getattr(link_table_class, local.key)
                             if count > 1:  # More than one possible relationship, so don't return any
                                 self.errno = 400
                                 self.error = "There are multiple possible relationships between column %s in table %s and table %s" % (table.primary_key[0].key, item['table_class'].Link, link_table_class.Link)
@@ -644,7 +658,12 @@ class ObjectPage(Page):
                 if not hasattr(r.argument.class_, "Link"):
                     continue
 
-                remote = r.remote_side[0]
+                remote = None
+                # Deal with sqlachemy changes
+                if hasattr(r, 'local_remote_pairs'): # sqlachemy 0.9+
+                    remote = r.local_remote_pairs[0][1]
+                else:                                # sqlalchemy < 0.9
+                    remote = r.remote_side[0]
                 test = self.session.query(remote.table).filter(remote == index).first()
                 if test is None:
                     continue
