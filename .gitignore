@@ -2,6 +2,7 @@
 .externalToolBuilders
 .project
 .pydevproject
+.settings
 *.pyo
 *.pyc
 local-push.sh
